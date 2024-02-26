@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import laspy
 import open3d as o3d
@@ -29,22 +30,15 @@ box1 = o3d.geometry.AxisAlignedBoundingBox.create_from_points(downpcd.points)
 box2 = o3d.geometry.AxisAlignedBoundingBox.create_from_points(downpcd2.points)
 
 
-dims1 = box1.get_max_bound() - box1.get_min_bound()
-bound_low1 = box1.get_min_bound()
-bound_high1 = box1.get_max_bound()
+#%%
 
-dims2 = box2.get_max_bound() - box2.get_min_bound()
-bound_low2 = box2.get_min_bound()
-bound_high2 = box2.get_max_bound()
+print("center of box 1: ", box1.get_center())
 
-
+#%%
 
 
 #polyscope
 ps.init()
-ps_box1 = ps.register_volume_grid("box1", bound_low1, dims1, [0.1, 0.1, 0.7])
-ps_box2 = ps.register_volume_grid("box2", bound_low2, dims2, [0.7, 0.1, 0.1])
-
 #taille des points  sphère de rayon 0.01
 ps.register_point_cloud("points", array, radius=0.0006, color=[0.1, 0.1, 0.7])
 ps.register_point_cloud("points2", array2, radius=0.0006, color=[0.7, 0.1, 0.1])
