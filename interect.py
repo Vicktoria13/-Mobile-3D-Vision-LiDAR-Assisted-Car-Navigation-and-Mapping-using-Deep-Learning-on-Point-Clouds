@@ -85,21 +85,7 @@ o3d.visualization.draw_geometries([pcd, translated_pcd, mini_box_test])
 #on filtre pour ne garder que les points dans la bounding box
 #on utilise les indices pour eviter les loops
 
-#en 1 ligne
-bool_has_points_from_cloud1 = np.all(np.logical_and(mini_box_test.min_bound <= array_pcd1, array_pcd1 <= mini_box_test.max_bound), axis=1)
-bool_has_points_from_cloud2 = np.all(np.logical_and(mini_box_test.min_bound <= array_pcd2, array_pcd2 <= mini_box_test.max_bound), axis=1)
 
-overlap = False
-if np.sum(bool_has_points_from_cloud1) > 0 and np.sum(bool_has_points_from_cloud2) > 0:
-    mini_box_test.color = [0, 1, 0]
-    print("overlap")
-    overlap = True
-else:
-    mini_box_test.color = [1, 0, 0]
-    print("no overlap")
-
-
-"""
 bool_has_points_from_cloud1 = np.logical_and(mini_box_test.min_bound[0] <= array_pcd1[:, 0], array_pcd1[:, 0] <= mini_box_test.max_bound[0])
 bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, mini_box_test.min_bound[1] <= array_pcd1[:, 1])
 bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, array_pcd1[:, 1] <= mini_box_test.max_bound[1])
@@ -125,17 +111,5 @@ else:
     mini_box_test.color = [1, 0, 0]
     print("no overlap")
 
-"""
-
-#maintenant, on construit 2 nouveaux nuages avec les points dans la bounding box
-if overlap : 
-    pcd1_in_box = o3d.geometry.PointCloud()
-    pcd1_in_box.points = o3d.utility.Vector3dVector(array_pcd1[bool_has_points_from_cloud1])
-    pcd1_in_box.paint_uniform_color([0.5, 1, 0.5])
-
-    pcd2_in_box = o3d.geometry.PointCloud()
-    pcd2_in_box.points = o3d.utility.Vector3dVector(array_pcd2[bool_has_points_from_cloud2])
-    pcd2_in_box.paint_uniform_color([0.5, 0.5, 1])
-
-    o3d.visualization.draw_geometries([pcd1_in_box, pcd2_in_box, mini_box_test] + list_mini_boxes)
+o3d.visualization.draw_geometries([pcd, translated_pcd, mini_box_test])
 

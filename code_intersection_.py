@@ -1,21 +1,35 @@
 import numpy as np
 import open3d as o3d
 import time
+import laspy
+
+
+# read the laz file
+inFile = laspy.read("/home/sdi-2023-01/Bureau/epfl/Data_pcd/85268 - M230905_223260_223320_LEFT.laz")
+coords = np.vstack((inFile.x, inFile.y, inFile.z)).transpose()
+
+other = laspy.read("/home/sdi-2023-01/Bureau/epfl/Data_pcd/85268 - M230905_223320_223380_LEFT.laz")
+coords2 = np.vstack((other.x, other.y, other.z)).transpose()
+
+
+#downsample the point cloud
+downpcd = o3d.geometry.PointCloud()
+downpcd.points = o3d.utility.Vector3dVector(coords)
+downpcd = downpcd.voxel_down_sample(voxel_size=1)
+array_pcd1 = np.array(downpcd.points)
+
+downpcd2 = o3d.geometry.PointCloud()
+downpcd2.points = o3d.utility.Vector3dVector(coords2)
+downpcd2 = downpcd2.voxel_down_sample(voxel_size=1)
+array_pcd2 = np.array(downpcd2.points)
+
+downpcd.paint_uniform_color([0.1, 0.1, 0.7])
+downpcd2.paint_uniform_color([0.7, 0.1, 0.1])
 
 
 #load a ply available in the open3d dataset
-ply_point_cloud = o3d.data.PLYPointCloud()
-pcd = o3d.io.read_point_cloud(ply_point_cloud.path)
-pcd.paint_uniform_color([0.5, 1, 0.5])
-array_pcd1 = np.asarray(pcd.points)
 
-
-#on cree n autre nuage legerement decale
-translated_pcd = o3d.geometry.PointCloud(pcd)
-translated_pcd.points = o3d.utility.Vector3dVector(np.asarray(translated_pcd.points) + [1.0, 0, 0.0])
-translated_pcd.paint_uniform_color([0.5, 0.5, 1])
-array_pcd2 = np.asarray(translated_pcd.points)
-
+o3d.visualization.draw_geometries([downpcd, downpcd2])
 
 
 #on cree une bounding box qui entoure les deux nuages
@@ -23,7 +37,7 @@ bbox = o3d.geometry.AxisAlignedBoundingBox.create_from_points(o3d.utility.Vector
 bbox.color = [1, 0, 0]
 
 list_mini_boxes = [] #liste avec des objets bounding box
-size = 0.3 #10 m
+size = 8 #10 m
 
 #on va discretiser la bounding box en mini bounding box de 1m de cote
 for x in np.arange(bbox.min_bound[0], bbox.max_bound[0], size):
@@ -37,7 +51,7 @@ for x in np.arange(bbox.min_bound[0], bbox.max_bound[0], size):
 
 print(len(list_mini_boxes)) #on a 1000 mini bounding box
 
-o3d.visualization.draw_geometries([pcd, translated_pcd, bbox] + list_mini_boxes)
+o3d.visualization.draw_geometries([downpcd, downpcd2, bbox] + list_mini_boxes)
 
 
 ##################### List of mini box which contains points from both clouds
@@ -79,7 +93,7 @@ print("--- %s seconds ---" % (time.time() - start_time))
 
 print(len(list_overlap_mini_boxes)) #on a 1000 mini bounding box
 
-o3d.visualization.draw_geometries([pcd, translated_pcd, bbox] + list_overlap_mini_boxes)
+o3d.visualization.draw_geometries([downpcd, downpcd2, bbox] + list_overlap_mini_boxes)
 
 
 ######### Visualize the subset of points
@@ -88,7 +102,7 @@ subset_pcd1.paint_uniform_color([1, 0.5, 0.5])
 subset_pcd2 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(subset_pcd2))
 subset_pcd2.paint_uniform_color([1, 0.5, 0.5])
 
-o3d.visualization.draw_geometries([pcd, translated_pcd, subset_pcd1, subset_pcd2])
+o3d.visualization.draw_geometries([downpcd, downpcd2, subset_pcd1, subset_pcd2])
 
 
 
