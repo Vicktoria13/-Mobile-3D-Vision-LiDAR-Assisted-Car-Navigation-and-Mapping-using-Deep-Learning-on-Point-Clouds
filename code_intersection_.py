@@ -2,8 +2,13 @@ import numpy as np
 import open3d as o3d
 import time
 import laspy
+import polyscope as ps
+import logging as logging
 ################### FAIT POUR LE LAZ A TESTER
 
+
+logging.basicConfig(level=logging.INFO)
+logging.info("Starting the program ...")
 
 # read the laz file
 inFile = laspy.read("/home/sdi-2023-01/Bureau/epfl/Data_pcd/85268 - M230905_223260_223320_LEFT.laz")
@@ -12,6 +17,9 @@ coords = np.vstack((inFile.x, inFile.y, inFile.z)).transpose()
 other = laspy.read("/home/sdi-2023-01/Bureau/epfl/Data_pcd/85268 - M230905_223320_223380_LEFT.laz")
 coords2 = np.vstack((other.x, other.y, other.z)).transpose()
 
+
+#shift
+coords2 = coords2 + np.array([0, -40, -18 ])
 
 #downsample the point cloud
 downpcd = o3d.geometry.PointCloud()
@@ -147,39 +155,6 @@ subset_pcd2.paint_uniform_color([1, 0,0])
 o3d.visualization.draw_geometries([subset_pcd1, subset_pcd2])
 
 
-#idee par la suite : creer overlap_pcd = subset_pcd1 + subset_pcd2, tracer la bounding box de overlap_pcd
-# et ensuite garder les points de pc1 et pc2 qui sont dans cette bounding box. De cette manière, on ne perd trop d'information
 
-
-######################  A TESTER
-overlap_pcd = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(np.concatenate((np.array(subset_pcd1.points), np.array(subset_pcd2.points)), axis=0)))
-bbox_overlap = o3d.geometry.AxisAlignedBoundingBox.create_from_points(overlap_pcd.points)
-
-#on cree une bounding box qui entoure les deux nuages
-bbox_overlap.color = [1, 0, 0]
-
-o3d.visualization.draw_geometries([downpcd, downpcd2, bbox_overlap])
-
-#on garde les points de pc1 et pc2 qui sont dans bbox_overlap : attention , on ne prend pas le downsampled point cloud mais le point cloud original
-bool_has_points_from_cloud1 = np.logical_and(bbox_overlap.min_bound[0] <= coords[:, 0], coords[:, 0] <= bbox_overlap.max_bound[0])
-bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, bbox_overlap.min_bound[1] <= coords[:, 1])
-bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, coords[:, 1] <= bbox_overlap.max_bound[1])
-bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, bbox_overlap.min_bound[2] <= coords[:, 2])
-bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, coords[:, 2] <= bbox_overlap.max_bound[2])
-
-bool_has_points_from_cloud2 = np.logical_and(bbox_overlap.min_bound[0] <= coords2[:, 0], coords2[:, 0] <= bbox_overlap.max_bound[0])
-bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, bbox_overlap.min_bound[1] <= coords2[:, 1])
-bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, coords2[:, 1] <= bbox_overlap.max_bound[1])
-bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, bbox_overlap.min_bound[2] <= coords2[:, 2])
-bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, coords2[:, 2] <= bbox_overlap.max_bound[2])
-
-coords_subset_pcd1 = coords[bool_has_points_from_cloud1]
-coords_subset_pcd2 = coords2[bool_has_points_from_cloud2]
-
-subset_pcd1 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(coords_subset_pcd1))
-# jaune
-subset_pcd1.paint_uniform_color([0, 1, 1])
-subset_pcd2 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(coords_subset_pcd2))
-subset_pcd2.paint_uniform_color([1, 0,0])
-
-o3d.visualization.draw_geometries([subset_pcd1, subset_pcd2])
+#save the 2 point clouds
+o3d.io.write_point_cloud("/home/sdi-2023-01/Bureau/epfl/Data_pcd/pcd1.ply", subset_pcd1)
