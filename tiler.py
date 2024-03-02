@@ -30,12 +30,16 @@ class ROI:
         o3d.visualization.draw([pcd_1, pcd_2])
 
     def keepOverlap(self):
+
+        #cela permet de garder que les points qui sont dans la zone de recouvrement
         mask_1 = np.any((self.pc_1[:, 2] < self.x_min, self.pc_1[:, 2] > self.x_max,
                          self.pc_1[:, 3] < self.y_min, self.pc_1[:, 3] > self.y_max),
                         axis=0)
         mask_2 = np.any((self.pc_2[:, 2] < self.x_min, self.pc_2[:, 2] > self.x_max,
                          self.pc_2[:, 3] < self.y_min, self.pc_2[:, 3] > self.y_max),
                         axis=0)
+        
+        #self.pc_1 est de taille (n, 8) et mask_1 est de taille (n,)
         self.pc_1 = self.pc_1[~mask_1]
         self.pc_2 = self.pc_2[~mask_2]
     
