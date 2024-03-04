@@ -35,8 +35,16 @@ def run_icp(target, ref, cfg):
 
 
 #on load les nuages de points sous forme txt
-pcd1 = o3d.io.read_point_cloud("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP")
-pcd2 = o3d.io.read_point_cloud("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP")
+
+point_pcd1 = np.loadtxt("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP/point_pcd1.txt")
+point_pcd2 = np.loadtxt("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP/point_pcd2.txt")
+
+pcd1 = o3d.geometry.PointCloud()
+pcd2 = o3d.geometry.PointCloud()
+
+pcd1.points = o3d.utility.Vector3dVector(point_pcd1)
+pcd2.points = o3d.utility.Vector3dVector(point_pcd2)
+
 
 o3d.visualization.draw_geometries([pcd1, pcd2])
 
