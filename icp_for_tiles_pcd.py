@@ -36,8 +36,13 @@ def run_icp(target, ref, cfg):
 
 #on load les nuages de points sous forme txt
 
-point_pcd1 = np.loadtxt("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP/point_pcd1.txt")
-point_pcd2 = np.loadtxt("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP/point_pcd2.txt")
+point_pcd1 = np.loadtxt("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP/point_pcd1.txt", delimiter=",")
+point_pcd2 = np.loadtxt("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP/point_pcd2.txt", delimiter=",")
+
+#on enleve la 1ere et les 3 dernieres colonnes
+point_pcd1 = point_pcd1[:,1:-3]
+point_pcd2 = point_pcd2[:,1:-3]
+
 
 pcd1 = o3d.geometry.PointCloud()
 pcd2 = o3d.geometry.PointCloud()
