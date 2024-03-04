@@ -1,7 +1,6 @@
 import open3d as o3d
 import numpy as np
-
-
+import laspy
 
 cfg_icp_preprocess = {
     'icp_thresh': 0.2,
@@ -34,22 +33,18 @@ def run_icp(target, ref, cfg):
 
 
 
-#on load les nuages de points sous forme txt
+#on load les nuages de points sous forme 
+inFile = laspy.read("")
+coords = np.vstack((inFile.x, inFile.y, inFile.z)).transpose()
 
-point_pcd1 = np.loadtxt("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP/point_pcd1.txt", delimiter=",")
-point_pcd2 = np.loadtxt("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP/point_pcd2.txt", delimiter=",")
-
-#on ne garde que les colonnes 1 2 3
-point_pcd1 = point_pcd1[:,2:5]
-point_pcd2 = point_pcd2[:,2:5]
-
-
+other = laspy.read("")
+coords2 = np.vstack((other.x, other.y, other.z)).transpose()
 
 pcd1 = o3d.geometry.PointCloud()
-pcd2 = o3d.geometry.PointCloud()
+pcd1.points = o3d.utility.Vector3dVector(coords)
 
-pcd1.points = o3d.utility.Vector3dVector(point_pcd1)
-pcd2.points = o3d.utility.Vector3dVector(point_pcd2)
+pcd2 = o3d.geometry.PointCloud()
+pcd2.points = o3d.utility.Vector3dVector(coords2)
 
 
 o3d.visualization.draw_geometries([pcd1, pcd2])
