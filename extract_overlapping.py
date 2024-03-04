@@ -1,3 +1,8 @@
+"""
+@Author: Victoria Nguyen
+@Date: 2024 spring
+"""
+
 import numpy as np
 import open3d as o3d
 import time
@@ -7,8 +12,45 @@ import argparse
 import logging as logging
 
 
-#to call
-#python extract_overlapping.py /home/sdi-2023-01/Bureau/epfl/Data_pcd/85268 - M230905_223260_223320_LEFT.laz /home/sdi-2023-01/Bureau/epfl/Data_pcd/85268 - M230905_223320_223380_LEFT.laz 8 True
+
+"""
+python3 extract_overlapping.py --path1 "/media/topostudent/Data1/2024spring_VictoriaZ/01_raw_data/04_CALCULS/230905/two_useful_scans/third_set/85268 - M230905_217440_217459_RIGHT.laz" --path2 "/media/topostudent/Data1/2024spring_VictoriaZ/01_raw_data/04_CALCULS/230905/two_useful_scans/third_set/85268 - M230905_218400_218437_RIGHT.laz" --output "/media/topostudent/Data1/2024spring_VictoriaZ/01_raw_data/04_CALCULS/230905/two_useful_scans/third_set" --size 8
+python3 extract_overlapping.py --path1 "/media/topostudent/Data1/2024spring_VictoriaZ/01_raw_data/04_CALCULS/230905/two_useful_scans/second_set/85268 - M230905_210540_210600_RIGHT.laz" --path2 "/media/topostudent/Data1/2024spring_VictoriaZ/01_raw_data/04_CALCULS/230905/two_useful_scans/second_set/85268 - M230905_215661_215700_RIGHT.laz" --output "/media/topostudent/Data1/2024spring_VictoriaZ/01_raw_data/04_CALCULS/230905/two_useful_scans/second_set" --size 8
+"""
+
+
+cfg_icp_preprocess = {
+    'icp_thresh': 0.2,
+    'icp_max_n': 50,
+    'icp_conv': 1e-4,
+    'voxel_size': 1
+}
+
+
+
+def run_icp(target, ref, cfg): 
+
+    """
+    target ==> object PointCloud
+    ref ==> object PointCloud
+    cfg ==> dictionnary with the following keys : 
+        - icp_thresh : float
+        - icp_max_n : int
+        - icp_conv : float
+        - voxel_size : float
+
+    return : object ICPConvergenceCriteria
+    """
+
+    icp = o3d.pipelines.registration.registration_icp(
+        target, ref, cfg['icp_thresh'],
+        estimation_method=o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+        criteria=o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=cfg['icp_max_n'], relative_fitness=cfg['icp_conv'], relative_rmse=cfg['icp_conv']),
+        )
+        
+    return icp
+
+
 
 
 
@@ -36,15 +78,32 @@ def main():
     other = laspy.read(args.path2)
     coords2 = np.vstack((other.x, other.y, other.z)).transpose()
 
-    ############ FOR HUGE PCD ==> downsample the point cloud
-    downpcd = o3d.geometry.PointCloud()
-    downpcd.points = o3d.utility.Vector3dVector(coords)
-    downpcd = downpcd.voxel_down_sample(voxel_size=1)
-    array_pcd1 = np.array(downpcd.points)
+    ############ LOAD THE POINT CLOUDS ############
 
-    downpcd2 = o3d.geometry.PointCloud()
-    downpcd2.points = o3d.utility.Vector3dVector(coords2)
-    downpcd2 = downpcd2.voxel_down_sample(voxel_size=1)
+    pcd1 = o3d.geometry.PointCloud()
+    pcd1.points = o3d.utility.Vector3dVector(coords)
+
+    pcd2 = o3d.geometry.PointCloud()
+    pcd2.points = o3d.utility.Vector3dVector(coords2)
+
+    ##### ETAPE DE SHIFTER LES POINTS pour enlever l'offset ==> ICP #####
+
+    res_icp = run_icp(pcd1, pcd2, cfg_icp_preprocess)
+    print("the translation between the two clouds is : ", res_icp.transformation[:3, 3])
+
+    #on applique la transformation a la deuxieme cloud
+    pcd2.transform(res_icp.transformation)
+
+
+    if args.visualize:
+        o3d.visualization.draw_geometries([pcd1, pcd2])
+
+
+    #########  DOWNSAMPLING car on n'a pas besoin d'autant de points pour trouver l'overlap
+    downpcd = pcd1.voxel_down_sample(voxel_size=1)
+    downpcd2 = pcd2.voxel_down_sample(voxel_size=1)
+
+    array_pcd1 = np.array(downpcd.points)
     array_pcd2 = np.array(downpcd2.points)
 
     downpcd.paint_uniform_color([0.1, 0.1, 0.7])
@@ -82,6 +141,9 @@ def main():
 
     logging.info("Start of the loop ...")
 
+    nb_mini_boxes = len(list_mini_boxes)
+    cmpt  = 0
+
     for mini_box_test in list_mini_boxes:
     
         bool_has_points_from_cloud1 = np.logical_and(mini_box_test.min_bound[0] <= array_pcd1[:, 0], array_pcd1[:, 0] <= mini_box_test.max_bound[0])
@@ -96,6 +158,7 @@ def main():
         bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, mini_box_test.min_bound[2] <= array_pcd2[:, 2])
         bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, array_pcd2[:, 2] <= mini_box_test.max_bound[2])
 
+
         """
 
         #celui la prend 5 fois plus de temps !!
@@ -109,6 +172,10 @@ def main():
             subset_pcd1 = np.concatenate((subset_pcd1, array_pcd1[bool_has_points_from_cloud1]), axis=0)
             subset_pcd2 = np.concatenate((subset_pcd2, array_pcd2[bool_has_points_from_cloud2]), axis=0)
 
+
+        #for display ==> loading bar
+        cmpt += 1
+        print("\r", "Progression : ", cmpt/nb_mini_boxes*100, "%", end="")
 
     logging.info("--- %s seconds ---" % (time.time() - start_time))
     logging.info(len(list_overlap_mini_boxes)) 
@@ -166,7 +233,7 @@ def main():
     new_coords_pcd1 = np.hstack((np.zeros((coords_subset_pcd1.shape[0],1)), coords_subset_pcd1))
     new_coords_pcd1 = np.hstack((new_coords_pcd1, np.zeros((coords_subset_pcd1.shape[0],3))))
     np.savetxt(args.output + "/pcd1.txt", new_coords_pcd1, delimiter=" ", fmt="%s")
-    
+
     new_coords_pcd2 = np.hstack((np.zeros((coords_subset_pcd2.shape[0],1)), coords_subset_pcd2))
     new_coords_pcd2 = np.hstack((new_coords_pcd2, np.zeros((coords_subset_pcd2.shape[0],3))))
     np.savetxt(args.output + "/pcd2.txt", new_coords_pcd2, delimiter=" ", fmt="%s")
