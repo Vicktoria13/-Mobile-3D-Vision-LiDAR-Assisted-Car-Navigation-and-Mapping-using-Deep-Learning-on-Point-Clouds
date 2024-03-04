@@ -39,9 +39,10 @@ def run_icp(target, ref, cfg):
 point_pcd1 = np.loadtxt("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP/point_pcd1.txt", delimiter=",")
 point_pcd2 = np.loadtxt("C:/Users/jeanbaptiste/Desktop/Projet de semestre ICP/point_pcd2.txt", delimiter=",")
 
-#on enleve la 1ere et les 3 dernieres colonnes
-point_pcd1 = point_pcd1[:,1:-3]
-point_pcd2 = point_pcd2[:,1:-3]
+#on ne garde que les colonnes 1 2 3
+point_pcd1 = point_pcd1[:,2:5]
+point_pcd2 = point_pcd2[:,2:5]
+
 
 
 pcd1 = o3d.geometry.PointCloud()
@@ -57,10 +58,13 @@ o3d.visualization.draw_geometries([pcd1, pcd2])
 #on applique l'ICP
 icp_res = run_icp(pcd1, pcd2, cfg_icp_preprocess)
 
-print("translation : ", icp_res.transformation[:3,3])
+
+#on applique que la translation !!
+translate_vector = icp_res.transformation[:3,3]
+
+#on applique cet offset à tout les points du nuage de points
+pcd2.points = o3d.utility.Vector3dVector(np.array(pcd2.points) + translate_vector)
 
 #on applique juste la translation
-pcd2.points = pcd2.points + icp_res.transformation[:3,3]
-
 o3d.visualization.draw_geometries([pcd1, pcd2])
 
