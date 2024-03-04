@@ -22,6 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description='Overlapping Extraction Automation')
     parser.add_argument('--path1', type=str, help='Path to the first .laz file')
     parser.add_argument('--path2', type=str, help='Path to the second .laz file')
+    parser.add_argument('--output', type=str, help='Path to the output .txt file')
     parser.add_argument('--size', type=int, help='Size of the mini bounding box')
     parser.add_argument('--visualize', type=bool, help='Visualize the overlapping area')
 
@@ -78,6 +79,8 @@ def main():
     subset_pcd2 = np.zeros((0, 3))
 
     start_time = time.time()
+
+    logging.info("Start of the loop ...")
 
     for mini_box_test in list_mini_boxes:
     
@@ -154,10 +157,19 @@ def main():
         o3d.visualization.draw_geometries([subset_pcd1, subset_pcd2])
 
 
-    ## SAVE THE SUBSET OF POINTS
-    o3d.io.write_point_cloud("subset_pcd1.ply", subset_pcd1)
-    o3d.io.write_point_cloud("subset_pcd2.ply", subset_pcd2)
-        
+    print("subset 1 has ", coords_subset_pcd1.shape[0], " points")
+    print("subset 2 has ", coords_subset_pcd2.shape[0], " points")
+
+    ## SAVE THE SUBSET OF POINTS as a txt file : 
+    # pour s'adapter facilement : rajout de 1 colonne de 0 au debut et 3 colonnes de 0 a la fin
+    
+    new_coords_pcd1 = np.hstack((np.zeros((coords_subset_pcd1.shape[0],1)), coords_subset_pcd1))
+    new_coords_pcd1 = np.hstack((new_coords_pcd1, np.zeros((coords_subset_pcd1.shape[0],3))))
+    np.savetxt(args.output + "/pcd1.txt", new_coords_pcd1, delimiter=" ", fmt="%s")
+    
+    new_coords_pcd2 = np.hstack((np.zeros((coords_subset_pcd2.shape[0],1)), coords_subset_pcd2))
+    new_coords_pcd2 = np.hstack((new_coords_pcd2, np.zeros((coords_subset_pcd2.shape[0],3))))
+    np.savetxt(args.output + "/pcd2.txt", new_coords_pcd2, delimiter=" ", fmt="%s")
     
     logging.info("End of the program ...")
     
