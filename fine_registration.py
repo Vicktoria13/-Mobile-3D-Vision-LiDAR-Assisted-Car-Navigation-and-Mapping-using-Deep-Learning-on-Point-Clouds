@@ -1,4 +1,8 @@
 import open3d as o3d
+import time
+import numpy as np
+
+import open3d as o3d
 import numpy as np
 import laspy
 
@@ -96,34 +100,43 @@ divided_pcd2_o3d.points = o3d.utility.Vector3dVector(divided_pcd2_array)
 
 
 
-#0.023
-#on applique l'ICP sur les 2 nuages de points divisés
-icp_res = o3d.pipelines.registration.registration_icp(divided_pcd1_o3d, divided_pcd2_o3d, 0.035git, np.eye(4), o3d.pipelines.registration.TransformationEstimationPointToPoint(), 
-                                                      o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=20))
+#on applique multi scale icp
 
-#la translation pour aller de pcd1 à pcd2 donc pour les aligner, il faut appliquer cette translation sur pcd2
+voxel_sizes = o3d.utility.DoubleVector([0.1, 0.05, 0.025])
 
-#on applique que la translation !!
-translate_vector = icp_res.transformation[:3,3]
-print("translate_vector: ", translate_vector)
+# List of Convergence-Criteria for Multi-Scale ICP:
+criteria_list = [
+    o3d.pipelines.registration.ICPConvergenceCriteria(relative_fitness=0.0001,
+                                relative_rmse=0.0001,
+                                max_iteration=20),
+    o3d.pipelines.registration.ICPConvergenceCriteria(0.00001, 0.00001, 15),
+    o3d.pipelines.registration.ICPConvergenceCriteria(0.000001, 0.000001, 10)
+]
 
-#on applique la translation sur le nuage de points d'origine !! (sur le target)
-pcd1.points = o3d.utility.Vector3dVector(np.asarray(pcd1.points) + translate_vector)
+# `max_correspondence_distances` for Multi-Scale ICP (o3d.utility.DoubleVector):
+max_correspondence_distances = o3d.utility.DoubleVector([0.3, 0.14, 0.07])
+
+# Initial alignment or source to target transform.
+init_source_to_target = o3d.core.Tensor.eye(4, o3d.core.Dtype.Float32)
+
+# Select the `Estimation Method`, and `Robust Kernel` (for outlier-rejection).
+estimation =  o3d.pipelines.registration.TransformationEstimationPointToPlane()
+
+# Save iteration wise `fitness`, `inlier_rmse`, etc. to analyse and tune result.
+save_loss_log = True
+
+# Setting Verbosity to Debug, helps in fine-tuning the performance.
+# o3d.utility.set_verbosity_level(o3d.utility.VerbosityLevel.Debug)
+
+s = time.time()
 
 
 
-#preprocess for pipeline : add one colomn of 0 at the beginning and 3 at the end
-#pour avoir la même structure que les pcd .txt
-
-pcd1_array = np.asarray(pcd1.points)
-pcd2_array = np.asarray(pcd2.points)
-
-pcd1_array = np.concatenate((np.zeros((pcd1_array.shape[0],1)), pcd1_array, np.zeros((pcd1_array.shape[0],3))), axis=1)
-pcd2_array = np.concatenate((np.zeros((pcd2_array.shape[0],1)), pcd2_array, np.zeros((pcd2_array.shape[0],3))), axis=1)
+ms_icp_time = time.time() - s
+print("Time taken by Multi-Scale ICP: ", ms_icp_time)
+print("Inlier Fitness: ", registration_ms_icp.fitness)
+print("Inlier RMSE: ", registration_ms_icp.inlier_rmse)
 
 
-#save the 2 pcd
-np.savetxt(root_path + name_pcd1 + "_aligned.txt", pcd1_array, delimiter=" ")
-np.savetxt(root_path + name_pcd2 + "_aligned.txt", pcd2_array, delimiter=" ")
-
-print("saved in ", root_path + name_pcd1 + "_aligned.txt")
+print("Transformation Matrix: ") 
+print(registration_ms_icp.transformation)
