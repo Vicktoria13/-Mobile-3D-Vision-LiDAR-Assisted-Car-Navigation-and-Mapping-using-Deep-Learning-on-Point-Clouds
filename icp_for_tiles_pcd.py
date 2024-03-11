@@ -24,6 +24,42 @@ print("PATH1: " + PATH1)
 print("PATH2: " + PATH2)
 
 
+
+
+def center_point_cloud(pcd):
+    # Calculer le centre du nuage de points
+    center = np.mean(np.asarray(pcd.points), axis=0)
+    # Centrer le nuage de points
+    pcd_centered = pcd.translate(-center)
+    return pcd_centered, center
+
+def align_and_transform(pcd1, pcd2):
+    # Centrer les nuages de points
+    pcd1_centered, center1 = center_point_cloud(pcd1)
+    pcd2_centered, center2 = center_point_cloud(pcd2)
+    
+    # Recalage des nuages de points centrés
+    icp_res = o3d.pipelines.registration.registration_icp(
+        pcd2_centered, pcd1_centered, 0.023, np.eye(4),
+        o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+        o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=50))
+
+    
+
+    # Obtenir la transformation résultante
+    transformation = icp_res.transformation
+    
+    # "Décentrer" la transformation
+    transformation[:3, 3] += center1 - transformation[:3, :3] @ center2
+    
+    # Appliquer la transformation au nuage de points 2 non centré
+    aligned_pcd2 = pcd2.transform(transformation)
+    
+    return aligned_pcd2
+
+
+
+
 #on load les nuages de points sous forme txt
 
 point_pcd1 = np.loadtxt(PATH1, delimiter=delim)
@@ -85,14 +121,15 @@ o3d.visualization.draw_geometries([divided_pcd1_o3d, divided_pcd2_o3d])
 icp_res = o3d.pipelines.registration.registration_icp(divided_pcd1_o3d, divided_pcd2_o3d, 0.023, np.eye(4), o3d.pipelines.registration.TransformationEstimationPointToPoint(), 
                                                       o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=20))
 
-#la translation pour aller de pcd1 à pcd2 donc pour les aligner, il faut appliquer cette translation sur pcd2
 
-#on applique que la translation !!
-translate_vector = icp_res.transformation[:3,3]
-print("translate_vector: ", translate_vector)
 
-#on applique la translation sur source
-pcd1.points = o3d.utility.Vector3dVector(np.asarray(pcd1.points) + translate_vector)
+#il faut decentrer la transformation
+matrix = icp_res.transformation
+matrix[0,3] += x_mean_pcd1
+matrix[1,3] += y_mean_pcd1
+matrix[2,3] += z_mean_pcd1
+
+
 
 #save the 2 pcd
 np.savetxt(root_path + name_pcd1 + "_aligned.txt", np.asarray(pcd1.points), delimiter=" ")

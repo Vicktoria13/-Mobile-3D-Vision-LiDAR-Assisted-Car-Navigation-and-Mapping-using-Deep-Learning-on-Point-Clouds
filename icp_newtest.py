@@ -71,44 +71,45 @@ if FLAG_Downsample:
 
 
 
+def center_point_cloud(pcd):
+    # Calculer le centre du nuage de points
+    center = np.mean(np.asarray(pcd.points), axis=0)
+    # Centrer le nuage de points
+    pcd_centered = pcd.translate(-center)
+    return pcd_centered, center
+
+def align_and_transform(pcd1, pcd2):
+    # Centrer les nuages de points
+    pcd1_centered, center1 = center_point_cloud(pcd1)
+    pcd2_centered, center2 = center_point_cloud(pcd2)
+    
+    # Recalage des nuages de points centrés
+    icp_res = o3d.pipelines.registration.registration_icp(
+        pcd2_centered, pcd1_centered, 0.023, np.eye(4),
+        o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+        o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=50))
+
+    
+
+    # Obtenir la transformation résultante
+    transformation = icp_res.transformation
+    
+    # "Décentrer" la transformation
+    transformation[:3, 3] += center1 - transformation[:3, :3] @ center2
+    
+    # Appliquer la transformation au nuage de points 2 non centré
+    aligned_pcd2 = pcd2.transform(transformation)
+    
+    return aligned_pcd2
+
+
+
 #les nuage est très grand ==> les coordonnées sont très grandes (2e+06)
-#pour l'ICP, on shifte les coordonnées autour de l'origine
-x_mean_pcd1 = np.mean(point_pcd1[:,0])
-y_mean_pcd1 = np.mean(point_pcd1[:,1])
-z_mean_pcd1 = np.mean(point_pcd1[:,2])
-divided_pcd1_array = point_pcd1 - [x_mean_pcd1, y_mean_pcd1, z_mean_pcd1]
 
-x_mean_pcd2 = np.mean(point_pcd2[:,0])
-y_mean_pcd2 = np.mean(point_pcd2[:,1])
-z_mean_pcd2 = np.mean(point_pcd2[:,2])
-divided_pcd2_array = point_pcd2 - [x_mean_pcd2, y_mean_pcd2, z_mean_pcd2]
-
-
-print("max pcd1: ", np.max(divided_pcd1_array))
-print("max pcd2: ", np.max(divided_pcd2_array))
-
-divided_pcd1_o3d = o3d.geometry.PointCloud()
-divided_pcd2_o3d = o3d.geometry.PointCloud()
-
-divided_pcd1_o3d.points = o3d.utility.Vector3dVector(divided_pcd1_array)
-divided_pcd2_o3d.points = o3d.utility.Vector3dVector(divided_pcd2_array)
+pcd2 = align_and_transform(pcd1, pcd2)
 
 
 
-
-#0.023
-#on applique l'ICP sur les 2 nuages de points divisés
-icp_res = o3d.pipelines.registration.registration_icp(divided_pcd1_o3d, divided_pcd2_o3d, 0.035, np.eye(4), o3d.pipelines.registration.TransformationEstimationPointToPoint(), 
-                                                      o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=20))
-
-#la translation pour aller de pcd1 à pcd2 donc pour les aligner, il faut appliquer cette translation sur pcd2
-
-#on applique que la translation !!
-translate_vector = icp_res.transformation[:3,3]
-print("translate_vector: ", translate_vector)
-
-#on applique la translation sur le nuage de points d'origine !! (sur le target)
-pcd1.points = o3d.utility.Vector3dVector(np.asarray(pcd1.points) + translate_vector)
 
 
 
