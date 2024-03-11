@@ -4,10 +4,20 @@ import laspy
 
 
 
-PATH1 = "/home/sdi-2023-01/Téléchargements/chunks/chunk_a3.txt"
-PATH2 = "/home/sdi-2023-01/Téléchargements/chunks/chunk_b3.txt"
+PATH1 = "/home/sdi-2023-01/Téléchargements/chunks_again_yes/chunk_a4.txt"
+PATH2 = "/home/sdi-2023-01/Téléchargements/chunks_again_yes/chunk_b4.txt"
 delim = ","
 down_flag = False
+
+###################
+name_pcd1 = PATH1.split("/")[-1].split(".")[0] #on récupère le nom du fichier
+name_pcd2 = PATH2.split("/")[-1].split(".")[0]
+
+#pour avoir /home/sdi-2023-01/Téléchargements/pcd_one_set/
+root_path = "/".join(PATH1.split("/")[:-1]) + "/"
+print("root_path: ", root_path)
+###################
+
 
 
 print("Open3D version: " + o3d.__version__)
@@ -31,11 +41,27 @@ pcd2 = o3d.geometry.PointCloud()
 pcd1.points = o3d.utility.Vector3dVector(point_pcd1)
 pcd2.points = o3d.utility.Vector3dVector(point_pcd2)
 
+
+print("max pcd1: ", np.max(point_pcd1))
+print("max pcd2: ", np.max(point_pcd2))
+
+
 #les nuage est très grand ==> les coordonnées sont très grandes (2e+06)
 #pour l'ICP, on shifte les coordonnées autour de l'origine
+x_mean_pcd1 = np.mean(point_pcd1[:,0])
+y_mean_pcd1 = np.mean(point_pcd1[:,1])
+z_mean_pcd1 = np.mean(point_pcd1[:,2])
+divided_pcd1_array = point_pcd1 - [x_mean_pcd1, y_mean_pcd1, z_mean_pcd1]
 
-divided_pcd1_array = np.asarray(pcd1.points)/500000
-divided_pcd2_array = np.asarray(pcd2.points)/500000
+x_mean_pcd2 = np.mean(point_pcd2[:,0])
+y_mean_pcd2 = np.mean(point_pcd2[:,1])
+z_mean_pcd2 = np.mean(point_pcd2[:,2])
+divided_pcd2_array = point_pcd2 - [x_mean_pcd2, y_mean_pcd2, z_mean_pcd2]
+
+
+print("max pcd1: ", np.max(divided_pcd1_array))
+print("max pcd2: ", np.max(divided_pcd2_array))
+
 divided_pcd1_o3d = o3d.geometry.PointCloud()
 divided_pcd2_o3d = o3d.geometry.PointCloud()
 
@@ -45,8 +71,9 @@ divided_pcd2_o3d.points = o3d.utility.Vector3dVector(divided_pcd2_array)
 
 
 
+#0.023
 #on applique l'ICP sur les 2 nuages de points divisés
-icp_res = o3d.pipelines.registration.registration_icp(divided_pcd1_o3d, divided_pcd2_o3d, 0.1, np.eye(4), o3d.pipelines.registration.TransformationEstimationPointToPoint(), 
+icp_res = o3d.pipelines.registration.registration_icp(divided_pcd1_o3d, divided_pcd2_o3d, 0.01, np.eye(4), o3d.pipelines.registration.TransformationEstimationPointToPoint(), 
                                                       o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=20))
 
 #la translation pour aller de pcd1 à pcd2 donc pour les aligner, il faut appliquer cette translation sur pcd2
@@ -56,8 +83,10 @@ translate_vector = icp_res.transformation[:3,3]
 print("translate_vector: ", translate_vector)
 
 #on applique la translation sur le nuage de points d'origine !! (sur le target)
-pcd2.points = o3d.utility.Vector3dVector(np.asarray(pcd2.points) + translate_vector)
+pcd1.points = o3d.utility.Vector3dVector(np.asarray(pcd1.points) + translate_vector)
 
 #save the 2 pcd
-np.savetxt("/home/sdi-2023-01/Téléchargements/chunks/chunk_a3_icp.txt", np.asarray(pcd1.points), delimiter=" ")
-np.savetxt("/home/sdi-2023-01/Téléchargements/chunks/chunk_b3_icp.txt", np.asarray(pcd2.points), delimiter=" ")
+np.savetxt(root_path + name_pcd1 + "_aligned.txt", np.asarray(pcd1.points), delimiter=" ")
+np.savetxt(root_path + name_pcd2 + "_aligned.txt", np.asarray(pcd2.points), delimiter=" ")
+
+print("saved in ", root_path + name_pcd1 + "_aligned.txt")
