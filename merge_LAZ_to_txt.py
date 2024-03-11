@@ -14,6 +14,15 @@ coords_left = np.vstack((Left.x, Left.y, Left.z)).transpose()
 coords = np.vstack((coords_right, coords_left))
 print("coords.shape: ", coords.shape)
 
+#downsample
+pcd = o3d.geometry.PointCloud()
+pcd.points = o3d.utility.Vector3dVector(coords)
+pcd_down = pcd.voxel_down_sample(voxel_size=0.1)
+
+coords = np.asarray(pcd_down.points)
+print("coords.shape: ", coords.shape)
+
+
 #ajout de 1 colonne de 0 au debut et 3 colonnes de 0 a la fin
 new_coords = np.hstack((np.zeros((coords.shape[0],1)), coords))
 new_coords = np.hstack((new_coords, np.zeros((coords.shape[0],3))))
