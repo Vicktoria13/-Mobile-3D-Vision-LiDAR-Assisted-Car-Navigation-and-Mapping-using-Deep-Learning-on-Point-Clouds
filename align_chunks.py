@@ -19,7 +19,12 @@ delim = ","
 
 
 
-#python align_chunks.py --path1 /home/sdi-2023-01/Téléchargements/res_MLS_simple_8/tiles/chunk_a3.txt --path2 /home/sdi-2023-01/Téléchargements/res_MLS_simple_8/tiles/chunk_b3.txt --visualize True
+
+"""
+python align_chunks.py --path1 /home/sdi-2023-01/Téléchargements/res_MLS_simple_8/tiles/chunk_a4.txt --path2 /home/sdi-2023-01/Téléchargements/res_MLS_simple_8/tiles/chunk_b4.txt --visualize True
+"""
+
+
 
 def main():
 
@@ -31,11 +36,12 @@ def main():
     parser = argparse.ArgumentParser(description='Align Pair Chunks')
     parser.add_argument('--path1', type=str, help='Path to the first .txt file')
     parser.add_argument('--path2', type=str, help='Path to the second .txt file')
-    parser.add_argument('--visualize', type=bool, help='Visualize the overlapping area')
-
+    parser.add_argument('--visualize', action="store_true")
+    #--visualize True or False
     args = parser.parse_args()
 
 
+    print(" Visualze set to: ", args.visualize)
 
 
     logging.info("Extracting the pcds paths ...")
@@ -114,7 +120,7 @@ def main():
     ################################################### OPEN3D ICP
     logging.info(" \n =============== OPEN3D ICP ==============")
     icp_res = o3d.pipelines.registration.registration_icp(shifted_pcd1_o3d, shifted_pcd2_o3d, 
-                                                        0.9, np.eye(4), 
+                                                        0.05, np.eye(4), 
                                                         o3d.pipelines.registration.TransformationEstimationPointToPoint(),
                                                         o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=500, relative_rmse=0.000001, relative_fitness=1e-6))
     
@@ -144,7 +150,7 @@ def main():
         ps.register_point_cloud("pcd2", np.asarray(shifted_pcd2_o3d.points), radius=0.0005)
         ps.show()
 
-    result_pcd1_SIMPLE_ICP.points = o3d.utility.Vector3dVector(np.array(result_pcd1_SIMPLE_ICP.points) + np.array([x_shift_both, y_shift_both, z_shift_both]))
+    
 
 
 
@@ -164,25 +170,53 @@ def main():
         ps.register_point_cloud("pcd2", np.asarray(shifted_pcd2_o3d.points), radius=0.0005)
         ps.show()
    
-    # UNSHIFT 
+
+
+
+
+    ########################### AFFICHE LES 6
+    if args.visualize:
+        ps.init()
+        
+        #couleur différente pour chaque point cloud : par defaut, seuls les originaux sont affichés
+        ps.register_point_cloud("pcd1 original", np.asarray(shifted_pcd1_o3d.points), radius=0.0005, color=[1,0,0], enabled=True)
+        ps.register_point_cloud("pcd2 original", np.asarray(shifted_pcd2_o3d.points), radius=0.0005, color=[0,1,0], enabled=True)
+
+        #ICP
+        ps.register_point_cloud("pcd1 ICP", np.asarray(result_pcd1_SIMPLE_ICP.points), radius=0.0005, color=[0,0,1], enabled=False)
+        ps.register_point_cloud("pcd2 ICP", np.asarray(shifted_pcd2_o3d.points), radius=0.0005, color=[0,0.75,1], enabled=False)
+
+        #OPEN3D
+        ps.register_point_cloud("pcd1 OPEN3D", np.asarray(result_pcd1_OPEN3D.points), radius=0.0005, color=[0.5, 0.25, 0.25], enabled=False)
+        ps.register_point_cloud("pcd2 OPEN3D", np.asarray(shifted_pcd2_o3d.points), radius=0.0005, color=[0.9, 0.9, 0.25], enabled=False)
+
+        ps.show()
+
+    ########################### UNSHIFT 
+        
+    result_pcd1_SIMPLE_ICP.points = o3d.utility.Vector3dVector(np.array(result_pcd1_SIMPLE_ICP.points) + np.array([x_shift_both, y_shift_both, z_shift_both]))
     result_pcd1_OPEN3D.points = o3d.utility.Vector3dVector(np.array(result_pcd1_OPEN3D.points) + np.array([x_shift_both, y_shift_both, z_shift_both]))
-
-
 
 
 
 
     logging.info("Saving the aligned point clouds ...")
 
+    ### ICI : adding 2 columns of 0 at the beginning and 3 at the end
+
+
+
     ### SIMPLE ICP
-    np.savetxt(root_path + name_pcd1 + "_aligned_SIMPLE_ICP.txt", np.asarray(result_pcd1_SIMPLE_ICP.points), delimiter=delim)
-    np.savetxt(root_path + name_pcd2 + "_aligned_SIMPLE_ICP.txt", np.asarray(pcd2.points), delimiter=delim)
+    np.savetxt(root_path + name_pcd1 + "_aligned_SIMPLE_ICP.txt", (np.concatenate((np.zeros((np.asarray(result_pcd1_SIMPLE_ICP.points).shape[0],2)), np.asarray(result_pcd1_SIMPLE_ICP.points), np.zeros((np.asarray(result_pcd1_SIMPLE_ICP.points).shape[0],3))), axis=1)), delimiter=delim)
+    np.savetxt(root_path + name_pcd2 + "_aligned_SIMPLE_ICP.txt", (np.concatenate((np.zeros((np.asarray(pcd2.points).shape[0],2)), np.asarray(pcd2.points), np.zeros((np.asarray(pcd2.points).shape[0],3))), axis=1)), delimiter=delim)
 
     ### OPEN3D ICP
-    np.savetxt(root_path + name_pcd1 + "_aligned_OPEN3D_ICP.txt", np.asarray(result_pcd1_OPEN3D.points), delimiter=delim)
-    np.savetxt(root_path + name_pcd2 + "_aligned_OPEN3D_ICP.txt", np.asarray(pcd2.points), delimiter=delim)
+    np.savetxt(root_path + name_pcd1 + "_aligned_OPEN3D_ICP.txt", (np.concatenate((np.zeros((np.asarray(result_pcd1_OPEN3D.points).shape[0],2)), np.asarray(result_pcd1_OPEN3D.points), np.zeros((np.asarray(result_pcd1_OPEN3D.points).shape[0],3))), axis=1)), delimiter=delim)
+    np.savetxt(root_path + name_pcd2 + "_aligned_OPEN3D_ICP.txt", (np.concatenate((np.zeros((np.asarray(pcd2.points).shape[0],2)), np.asarray(pcd2.points), np.zeros((np.asarray(pcd2.points).shape[0],3))), axis=1)), delimiter=delim)
 
    
+    
+
 
     logging.info("Program finished ...")
 
