@@ -26,39 +26,6 @@ print("PATH2: " + PATH2)
 
 
 
-def center_point_cloud(pcd):
-    # Calculer le centre du nuage de points
-    center = np.mean(np.asarray(pcd.points), axis=0)
-    # Centrer le nuage de points
-    pcd_centered = pcd.translate(-center)
-    return pcd_centered, center
-
-def align_and_transform(pcd1, pcd2):
-    # Centrer les nuages de points
-    pcd1_centered, center1 = center_point_cloud(pcd1)
-    pcd2_centered, center2 = center_point_cloud(pcd2)
-    
-    # Recalage des nuages de points centrés
-    icp_res = o3d.pipelines.registration.registration_icp(
-        pcd2_centered, pcd1_centered, 0.023, np.eye(4),
-        o3d.pipelines.registration.TransformationEstimationPointToPoint(),
-        o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=50))
-
-    
-
-    # Obtenir la transformation résultante
-    transformation = icp_res.transformation
-    
-    # "Décentrer" la transformation
-    transformation[:3, 3] += center1 - transformation[:3, :3] @ center2
-    
-    # Appliquer la transformation au nuage de points 2 non centré
-    aligned_pcd2 = pcd2.transform(transformation)
-    
-    return aligned_pcd2
-
-
-
 
 #on load les nuages de points sous forme txt
 
@@ -123,11 +90,15 @@ icp_res = o3d.pipelines.registration.registration_icp(divided_pcd1_o3d, divided_
 
 
 
-#il faut decentrer la transformation
-matrix = icp_res.transformation
-matrix[0,3] += x_mean_pcd1
-matrix[1,3] += y_mean_pcd1
-matrix[2,3] += z_mean_pcd1
+#On applique la transformation resultante aux nuages d'origine : attention il faut "décentrer" la transformation
+transformation = icp_res.transformation
+transformation = np.array(transformation)
+
+# "Décentrer" la transformation
+transformation[:3, 3] += [x_mean_pcd1, y_mean_pcd1, z_mean_pcd1] - transformation[:3, :3] @ [x_mean_pcd2, y_mean_pcd2, z_mean_pcd2]
+
+# Appliquer la transformation au nuage de points 2 non centré
+pcd1 = pcd1.transform(transformation)
 
 
 

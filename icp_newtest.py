@@ -93,6 +93,7 @@ def align_and_transform(pcd1, pcd2):
 
     # Obtenir la transformation résultante
     transformation = icp_res.transformation
+    transformation = np.array(transformation)
     
     # "Décentrer" la transformation
     transformation[:3, 3] += center1 - transformation[:3, :3] @ center2
