@@ -1,1 +1,0 @@
-import cloudComPy as cc                                                # import the CloudComPy module
