@@ -31,7 +31,7 @@ def main():
     OUTPUT : run_icp_MLS.sh
 
     where there are nb_pairs of lines, each line is a command to align two chunks eg
-    python3 align_chunks.py --path1 /home/sdi-2023-01/Téléchargements/res_MLS_simple_8/tiles/chunk_a4.txt --path2 /home/sdi-2023-01/Téléchargements/res_MLS_simple_8/tiles/chunk_b4.txt --visualize True
+    python3 align_chunks.py --path1 /home/sdi-2023-01/Téléchargements/res_MLS_simple_10/tiles/chunk_a4.txt --path2 /home/sdi-2023-01/Téléchargements/res_MLS_simple_10/tiles/chunk_b4.txt --visualize True
     """
 
     logging.basicConfig(level=logging.INFO)
