@@ -4,7 +4,18 @@ import numpy as np
 import logging
 import os
 
+""" 
+Code that creaat a .sh file to run the align_chunks.py script on all the pairs of chunks in the tiles directory
+exemple of use :
 
+python create_script_icp_MLS_chunks.py --path_tiles /home/sdi-2023-01/Téléchargements/res_MLS_simple_10/tiles/ 
+
+
+
+On a le fichier path/tiles/
+
+- On copie tout le contenu dans un autre fichier path/tiles_non_aligned/
+"""
 
 def extract_pairs(rooth_path):
     """
@@ -54,6 +65,15 @@ def main():
         str_visu = "--visualize True"
     else:
         str_visu = ""
+
+
+    #copy the tiles directory to tiles_non_aligned pour sauvegarder les fichiers originaux
+    os.system(f"cp -r {args.path_tiles} {args.path_tiles[:-1] + '_non_aligned/'}")
+    print("Copy into {} done".format(args.path_tiles[:-1] + '_non_aligned/') )
+
+    
+
+    # write the commands in the .sh file
     with open("run_icp_MLS.sh", "w") as f:
         for path1, path2 in pairs.items():
             f.write(f"python3 align_chunks.py --path1 {path1} --path2 {path2} {str_visu}\n")
