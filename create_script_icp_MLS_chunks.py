@@ -73,14 +73,25 @@ def main():
 
     
 
+    #Save the sh file the same path as the tiles directory
+    #sh_path = path/res_MLS_simple_10/
+    #path_tiles = path/res_MLS_simple_10/tiles/
+    #so we want to go to path/res_MLS_simple_10/
+
+    sh_path = "/".join(args.path_tiles.split("/")[:-2]) + "/"
+    os.chdir(sh_path)
+    sh_path = sh_path + "run_icp_MLS.sh"
+    print("sh_path : ", sh_path)
+
     # write the commands in the .sh file
-    with open("run_icp_MLS.sh", "w") as f:
+    with open(sh_path , "w") as f:
         for path1, path2 in pairs.items():
             f.write(f"python3 align_chunks.py --path1 {path1} --path2 {path2} {str_visu}\n")
 
 
     #make the file executable
-    os.system("chmod +x run_icp_MLS.sh")
+    os.system(f"chmod +x {sh_path}")
+    
 
 
 
