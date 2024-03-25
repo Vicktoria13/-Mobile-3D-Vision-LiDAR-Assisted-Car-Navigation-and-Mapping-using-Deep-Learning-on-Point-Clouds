@@ -5,9 +5,6 @@ from qgis.core import QgsProject, QgsVectorLayer, QgsSpatialIndex
 chemin_fichier_gqz = "/media/topostudent/Data1/2024spring_VictoriaZ/01_raw_data/04_CALCULS/230905/LASER/5_VECTORS/scan_map.qgz"
 
 
-#print l'attribut name de chque scan
-
-# Charger le projet QGIS à partir du fichier GQZ
 QgsProject.instance().read(chemin_fichier_gqz)
 
 #affiche le nom des couches disponibles dans le projet
@@ -37,6 +34,8 @@ print(couche_scans.getFeature(0).attributes())
 
 #creer une liste de pair de scans qui se chevauchent : on inclut pas le scan lui-même
 
+
+
 chevauchements = []
 list_chevauchements = []
 
@@ -47,11 +46,11 @@ for scan in couche_scans.getFeatures():
     
     # Obtenir les identifiants des scans qui se chevauchent avec le scan actuel
     chevauchements = index_spatial.intersects(scan.geometry().boundingBox())
+
     
     #enlever le scan actuel de la liste des scans chevauchants
     chevauchements.remove(scan.id())
     
-    #ajouter les paires de scans qui se chevauchent
     for chevauchement in chevauchements:
         list_chevauchements.append([scan.id(), chevauchement])
     
@@ -60,12 +59,31 @@ for scan in couche_scans.getFeatures():
 
 
 
+#enlever les doublons
+list_chevauchements = list(set([tuple(sorted(chevauchement)) for chevauchement in list_chevauchements]))
 
-#boucle pour afficher les paires de scans qui se chevauchent
+#pour chaque pairs de scans, afficher la longeur de chevauchement des bounding box !! : ainsi, il faut calculer la longueur de chevauchement des bounding box
+new_list_chevauchements = []
+
+seuil = 0.5
 for chevauchement in list_chevauchements:
-    print("Scan 1: ", couche_scans.getFeature(chevauchement[0]).attribute("name"))
-    print("Scan 2: ", couche_scans.getFeature(chevauchement[1]).attribute("name"))
-    print("=======================================")
+    chevauchement1 = couche_scans.getFeature(chevauchement[0]).geometry()
+    chevauchement2 = couche_scans.getFeature(chevauchement[1]).geometry()
+    chevauchement1.intersection(chevauchement2).length()
+    
+    longueur_chevauchement = chevauchement1.intersection(chevauchement2).length()
+
+    #si la longueur est inférieure à un seuil, on ne garde pas la paire de scans
+    if longueur_chevauchement < seuil:
+        new_list_chevauchements.append(chevauchement)
+
+
+#ecrire les paires de scans qui se chevauchent dans un fichier texte
+#ligne 1 : nom_scan1 nom_scan2
+
+with open("chevauchements.txt", "w") as f:
+    for chevauchement in list_chevauchements:
+        f.write(couche_scans.getFeature(chevauchement[0]).attribute("name") + " " + couche_scans.getFeature(chevauchement[1]).attribute("name") + "\n")
 
 """
 # Charger le projet QGIS à partir du fichier GQZ
