@@ -46,8 +46,7 @@ __Method__
 - In order no to lose to much information, we create a second bounding box of the 2 subsets and we keep the points that are inside this second bounding box
 
 __Result__
-
-Insert images
+<img src="images/overlap_pipeline.png" width="950" height="370">
 
 
 ## :gear: Second step : Pre processing and division into chunks
