@@ -4,7 +4,8 @@ import argparse
 import logging
 
 """
-python3 map_extract_pair_ID_laser.py --qgz_file /media/topostudent/Data1/2024spring_VictoriaZ/chevauchement.txt
+python3 map_extract_pair_ID_laser.py --qgz_file /media/topostudent/Data1/2024spring_VictoriaZ/01_raw_data/04_CALCULS/230905/LASER/5_VECTORS/scan_map.qgz --out /$HOME/Desktop/overlapping_scans.txt
+
 """
 def main():
 
@@ -44,20 +45,19 @@ def main():
     
     #get rid of duplicates
     list_chevauchements = list(set([tuple(sorted(item)) for item in list_chevauchements]))
-    print("BEFORE: ", len(list_chevauchements))
+    
 
     #sort to have only overlapping width > threshold
+    seuil = 0.001
     new_list_chevauchements = []
-    seuil_area = 0.5
-
     for chevauchement in list_chevauchements:
         scan1 = couche_scans.getFeature(chevauchement[0])
         scan2 = couche_scans.getFeature(chevauchement[1])
+        longueur_chevauchement = scan1.geometry().boundingBox().intersect(scan2.geometry().boundingBox()).width()
+        print("Overlap length: ", longueur_chevauchement)
+        if longueur_chevauchement > seuil:
+            new_list_chevauchements.append(chevauchement)
 
-        if scan1.geometry().intersects(scan2.geometry()):
-            intersection = scan1.geometry().intersection(scan2.geometry())
-            if intersection.area() > seuil_area:
-                new_list_chevauchements.append(chevauchement)
 
     logger.info("=== Writing the pairs of overlapping scans to the output file ...  ")
     with open(path_out_txt, 'w') as f:
@@ -69,7 +69,7 @@ def main():
             f.write(id1 + " " + id2 + "\n")
             
     
-    
+    print("BEFORE: ", len(list_chevauchements))
     print("AFTER: ", len(new_list_chevauchements))
 
 
@@ -81,3 +81,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
