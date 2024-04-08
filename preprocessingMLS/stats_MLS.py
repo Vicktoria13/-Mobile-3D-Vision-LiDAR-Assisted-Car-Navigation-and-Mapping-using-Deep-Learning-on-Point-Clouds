@@ -62,6 +62,15 @@ def main():
         RMSE_RANSAC1[i] = round(float(RMSE_RANSAC1[i]), 2)
         RMSE_ICP_POINTS1[i] = round(float(RMSE_ICP_POINTS1[i]), 2)
 
+
+    #enleve le max
+    RMSE_RAW_POINTS1.remove(max(RMSE_RAW_POINTS1))
+    RMSE_GEOM_POINTS1.remove(max(RMSE_GEOM_POINTS1))
+    RMSE_RANSAC1.remove(max(RMSE_RANSAC1))
+    RMSE_ICP_POINTS1.remove(max(RMSE_ICP_POINTS1))
+
+    
+
     # =============== PLOT ===============
     fig, ax = plt.subplots()
     ax.plot(RMSE_RAW_POINTS1, label='RMSE_RAW_POINTS')
