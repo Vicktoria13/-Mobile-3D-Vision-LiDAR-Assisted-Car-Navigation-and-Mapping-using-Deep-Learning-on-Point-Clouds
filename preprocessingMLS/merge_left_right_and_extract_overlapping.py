@@ -234,46 +234,61 @@ def main():
     id2 = args.id2
     path_out_txt = args.out
 
-    #################### 2. in the folder 'path_folder_data_las', get the left and right clouds paths
-    logger.info("=== Looking for LEFT and RIGHT clouds of + " + id1 + " ...")
-
-    #on itere dans --path_folder_data_las pour trouver les paths RIGHT et LEFT correspondant aux id1 et id2
-    path_right_id1 = None
-    path_left_id1 = None
-
-    path_right_id2 = None
-    path_left_id2 = None
-
-    for root, dirs, files in os.walk(path_folder_data_las):
-        for file in files:
-            if id1 in file:
-                if "RIGHT" in file:
-                    path_right_id1 = os.path.join(root, file)
-                if "LEFT" in file:
-                    path_left_id1 = os.path.join(root, file)
-
-            if id2 in file:
-                if "RIGHT" in file:
-                    path_right_id2 = os.path.join(root, file)
-                if "LEFT" in file:
-                    path_left_id2 = os.path.join(root, file)
-
-    if path_right_id1 is None or path_left_id1 is None or path_right_id2 is None or path_left_id2 is None:
-        logger.error("One of the clouds is missing")
-        return
-    
-    logger.info("=== Found the LEFT and RIGHT clouds of " + id1)
-    logger.info("=== Found the LEFT and RIGHT clouds of " + id2)
-
-    #################### 3. Merge the left and right clouds of the pair
 
     if FLAG_MERGED:
+        #################### 2. in the folder 'path_folder_data_las', get the left and right clouds paths
+        logger.info("=== Looking for LEFT and RIGHT clouds of + " + id1 + " ...")
+
+        #on itere dans --path_folder_data_las pour trouver les paths RIGHT et LEFT correspondant aux id1 et id2
+        path_right_id1 = None
+        path_left_id1 = None
+
+        path_right_id2 = None
+        path_left_id2 = None
+
+        for root, dirs, files in os.walk(path_folder_data_las):
+            for file in files:
+                if id1 in file:
+                    if "RIGHT" in file:
+                        path_right_id1 = os.path.join(root, file)
+                    if "LEFT" in file:
+                        path_left_id1 = os.path.join(root, file)
+
+                if id2 in file:
+                    if "RIGHT" in file:
+                        path_right_id2 = os.path.join(root, file)
+                    if "LEFT" in file:
+                        path_left_id2 = os.path.join(root, file)
+
+        if path_right_id1 is None or path_left_id1 is None or path_right_id2 is None or path_left_id2 is None:
+            logger.error("One of the clouds is missing")
+            return
+        
+        logger.info("=== Found the LEFT and RIGHT clouds of " + id1)
+        logger.info("=== Found the LEFT and RIGHT clouds of " + id2)
+
+        #################### 3. Merge the left and right clouds of the pair
+
         logger.info("=== Merging the LEFT and RIGHT clouds of " + id1)
         merged_cloud_id1 = merge_left_right(path_left_id1, path_right_id1)
         merged_cloud_id2 = merge_left_right(path_left_id2, path_right_id2)
 
     else:
         logger.info("=== Loading only the right, not merging ...")
+
+        for root, dirs, files in os.walk(path_folder_data_las):
+            for file in files:
+                if id1 in file:
+                    if "RIGHT" in file:
+                        path_right_id1 = os.path.join(root, file)
+
+                if id2 in file:
+                    if "RIGHT" in file:
+                        path_right_id2 = os.path.join(root, file)
+
+        logger.info("=== Found the RIGHT clouds of " + id1)
+        logger.info("=== Found the RIGHT clouds of " + id2)
+
         pcd1 = laspy.read(path_right_id1)
         pcd2 = laspy.read(path_right_id2)
 
