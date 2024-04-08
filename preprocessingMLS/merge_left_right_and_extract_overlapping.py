@@ -1,3 +1,10 @@
+"""
+@Author : Victoria NGUYEN
+@Date : 8 avril 2024
+ENAC - Projet de semestre : 2024
+"""
+
+
 import os
 import argparse
 import logging
@@ -5,16 +12,38 @@ import laspy
 import numpy as np
 import open3d as o3d
 import time
+
+
+
 """
-python3 --data_las /media/topostudent/Data1/2024spring_VictoriaZ/data
-        --id1 M230905_202223_182817
-        --id2 M230905_202223_182817
-        --out /$HOME/Desktop/overlapping_scans.txt
+
+Etant donné :
+
+- le dossier contenant tous les .laz
+- Les 2 ids des nuages de points à comparer
+- Le path de sortie pour le fichier txt
+
+Permet de :
+
+- Trouver les nuages de points LEFT et RIGHT correspondant aux ids
+- Les Fusionner
+- Extraire la zone d'overlap entre les 2 nuages fusionnés
+- Sauvegarder les points de l'overlap dans un fichier txt
+
+
+python3 merge_left_right_and_extract_overlapping.py --data_las /media/topostudent/Data1/2024spring_VictoriaZ/01_raw_data/04_CALCULS/230905/LASER/3_OUTPUT_LAZ/ORI --id1 M230905_217560_217615 --id2 M230905_217800_217860 
+--out /$HOME/Desktop --visualize true
 """
 
 
 
 def merge_left_right(path_left, path_right):
+
+    """
+    Merge the left and right clouds of a pair
+    path_left : str : the path to the left cloud .las file
+    path_right : str : the path to the right cloud .las file
+    """
 
     right = laspy.read(path_right)
     coords_right = np.vstack((right.x, right.y, right.z)).transpose()
@@ -32,6 +61,14 @@ def merge_left_right(path_left, path_right):
 
 
 def extract_overlapping(merged_array_cloud1, merged_array_cloud2, visualize=False):
+
+    """
+    Extract the overlapping area between two clouds
+    merged_array_cloud1 : np.array : the merged cloud 1 (left and right)
+    merged_array_cloud2 : np.array : the merged cloud 2 (left and right)
+    visualize : bool : whether to visualize the overlapping using open3d
+    """
+
     pcd1_merged = o3d.geometry.PointCloud()
     pcd1_merged.points = o3d.utility.Vector3dVector(merged_array_cloud1)
 
@@ -163,6 +200,16 @@ def extract_overlapping(merged_array_cloud1, merged_array_cloud2, visualize=Fals
 
 
 
+
+
+
+
+
+
+
+
+###########################################
+
 def main():
 
     logging.basicConfig(level=logging.INFO)
@@ -187,7 +234,7 @@ def main():
     path_out_txt = args.out
 
     #################### 2. in the folder 'path_folder_data_las', get the left and right clouds paths
-    logger.info("=== Looking for LEFT and RIGHT clouds of + " + id1)
+    logger.info("=== Looking for LEFT and RIGHT clouds of + " + id1 + " ...")
 
     #on itere dans --path_folder_data_las pour trouver les paths RIGHT et LEFT correspondant aux id1 et id2
     path_right_id1 = None
@@ -235,11 +282,11 @@ def main():
 
 
     #save pcd1
-    path_out_txt_pcd1 = path_out_txt + "/pcd1.txt"
+    path_out_txt_pcd1 = path_out_txt + "/" + id1 + ".txt"
     np.savetxt(path_out_txt_pcd1, new_coords_pcd1, delimiter=" ", fmt="%s")
 
     #save pcd2
-    path_out_txt_pcd2 = path_out_txt + "/pcd2.txt"
+    path_out_txt_pcd2 = path_out_txt + "/" + id2 + ".txt"
     np.savetxt(path_out_txt_pcd2, new_coords_pcd2, delimiter=" ", fmt="%s")
 
     logger.info("=== Saved the overlapping points to the output txt files")

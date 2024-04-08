@@ -1,7 +1,29 @@
+"""
+@Author : Victoria NGUYEN
+@Date : 8 avril 2024
+ENAC - Projet de semestre : 2024
+"""
+
 from qgis.core import QgsProject, QgsVectorLayer, QgsSpatialIndex
 import os
 import argparse
 import logging
+
+"""
+
+Ce code permet , étant donné :
+
+- un fichier QGZ contenant le chemin de la voiture
+- un txt file de sortie
+
+d'extraire les paires de scans qui se chevauchent, et d'enregistrer dans out.txt tq chaque ligne
+contient les noms des scans qui se chevauchent, ie
+
+================>     M230905_207850_207900_RIGHT.rxp M230905_207850_207900_RIGHT.rxp
+
+(que des right dans le qgz)
+"""
+
 
 """
 python3 map_extract_pair_ID_laser.py --qgz_file /media/topostudent/Data1/2024spring_VictoriaZ/01_raw_data/04_CALCULS/230905/LASER/5_VECTORS/scan_map.qgz --out /$HOME/Desktop/overlapping_scans.txt
