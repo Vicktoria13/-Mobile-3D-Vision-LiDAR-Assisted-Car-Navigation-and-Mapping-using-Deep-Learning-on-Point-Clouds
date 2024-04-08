@@ -13,7 +13,7 @@ import numpy as np
 import open3d as o3d
 import time
 
-
+FLAG_MERGED = True
 
 """
 
@@ -212,6 +212,7 @@ def extract_overlapping(merged_array_cloud1, merged_array_cloud2, visualize=Fals
 
 def main():
 
+
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
@@ -266,9 +267,18 @@ def main():
 
     #################### 3. Merge the left and right clouds of the pair
 
-    logger.info("=== Merging the LEFT and RIGHT clouds of " + id1)
-    merged_cloud_id1 = merge_left_right(path_left_id1, path_right_id1)
-    merged_cloud_id2 = merge_left_right(path_left_id2, path_right_id2)
+    if FLAG_MERGED:
+        logger.info("=== Merging the LEFT and RIGHT clouds of " + id1)
+        merged_cloud_id1 = merge_left_right(path_left_id1, path_right_id1)
+        merged_cloud_id2 = merge_left_right(path_left_id2, path_right_id2)
+
+    else:
+        logger.info("=== Loading only the right, not merging ...")
+        pcd1 = laspy.read(path_right_id1)
+        pcd2 = laspy.read(path_right_id2)
+
+        merged_cloud_id1 = np.vstack((pcd1.x, pcd1.y, pcd1.z)).transpose()
+        merged_cloud_id2 = np.vstack((pcd2.x, pcd2.y, pcd2.z)).transpose()
 
 
     ################### 4. Extract the overlapping
