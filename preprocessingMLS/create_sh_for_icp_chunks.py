@@ -14,7 +14,15 @@ import os
 Code that creaat a .sh file to run the align_chunks.py script on all the pairs of chunks in the tiles directory
 exemple of use :
 
-python create_script_icp_MLS_chunks.py --path_tiles /home/sdi-2023-01/Téléchargements/res_MLS_simple_10/tiles/ 
+
+python create_sh_for_icp_chunks.py --path_tiles /media/topostudent/Data1/2024spring_VictoriaZ/TEST-RES-after-eastern/res-8-april-merged/tiles/
+
+Un .sh va etre creer dans 
+/media/topostudent/Data1/2024spring_VictoriaZ/TEST-RES-after-eastern/res-8-april-merged/run_icp_MLS.sh
+
+Ainsi, chaque ligne du .sh devra etre du type
+
+python3 chemin to preprocessingMLS/align_chunks.py --path1 /media/topostudent/Data1/2024spring_VictoriaZ/TEST-RES-after-eastern/res-8-april-merged/tiles/chunk_a4.txt --path2 /media/topostudent/Data1/2024spring_VictoriaZ/TEST-RES-after-eastern/res-8-april-merged/tiles/chunk_b4.txt --visualize True
 
 """ 
 
@@ -64,6 +72,12 @@ def main():
 
     pairs = extract_pairs(args.path_tiles)
 
+    ########### RECUPERE LE CHEMIN ENTIER VERS align_chunks.py
+    current_path = os.getcwd() #... /preprocessingMLS/
+    
+    
+
+
     logging.info("Creating the .sh file ...")
 
     print(" Visualze set to: ", args.visualize)
@@ -90,11 +104,12 @@ def main():
     sh_path = sh_path + "run_icp_MLS.sh"
     print("sh_path : ", sh_path)
 
+    path_to_align_chunks = current_path + "/align_chunks.py"
+
     # write the commands in the .sh file
     with open(sh_path , "w") as f:
         for path1, path2 in pairs.items():
-            f.write(f"python3 align_chunks.py --path1 {path1} --path2 {path2} {str_visu}\n")
-
+            f.write(f"python3 {path_to_align_chunks} --path1 {path1} --path2 {path2} {str_visu}\n")
 
     #make the file executable
     os.system(f"chmod +x {sh_path}")
