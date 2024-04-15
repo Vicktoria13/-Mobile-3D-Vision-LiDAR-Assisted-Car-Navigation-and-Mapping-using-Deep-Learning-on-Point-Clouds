@@ -4,6 +4,8 @@ import time
 import laspy
 import polyscope as ps
 import logging as logging
+
+FLAG_VISUALIZE = False
 ################### FAIT POUR LE LAZ A TESTER
 
 
@@ -12,9 +14,18 @@ logging.info("Starting the program ...")
 
 # read the laz file
 inFile = laspy.read("/home/sdi-2023-01/Bureau/epfl/Data_pcd/85268 - M230905_223260_223320_LEFT.laz")
+
+#garder les coordonnees et les timestamps !!
+coords1_time_stamp = inFile.gps_time
+coords1_time_stamp = np.array(coords1_time_stamp)
 coords = np.vstack((inFile.x, inFile.y, inFile.z)).transpose()
 
+
+
+
 other = laspy.read("/home/sdi-2023-01/Bureau/epfl/Data_pcd/85268 - M230905_223320_223380_LEFT.laz")
+coords2_time_stamp = other.gps_time
+coords2_time_stamp = np.array(coords2_time_stamp)
 coords2 = np.vstack((other.x, other.y, other.z)).transpose()
 
 
@@ -36,8 +47,8 @@ downpcd2.paint_uniform_color([0.7, 0.1, 0.1])
 
 
 #load a ply available in the open3d dataset
-
-o3d.visualization.draw_geometries([downpcd, downpcd2])
+if FLAG_VISUALIZE:
+    o3d.visualization.draw_geometries([downpcd, downpcd2])
 
 
 #on cree une bounding box qui entoure les deux nuages
@@ -59,7 +70,10 @@ for x in np.arange(bbox.min_bound[0], bbox.max_bound[0], size):
 
 print(len(list_mini_boxes)) #on a 1000 mini bounding box
 
-o3d.visualization.draw_geometries([downpcd, downpcd2, bbox] + list_mini_boxes)
+
+if FLAG_VISUALIZE:
+
+    o3d.visualization.draw_geometries([downpcd, downpcd2, bbox] + list_mini_boxes)
 
 
 ##################### List of mini box which contains points from both clouds
@@ -101,7 +115,8 @@ print("--- %s seconds ---" % (time.time() - start_time))
 
 print(len(list_overlap_mini_boxes)) #on a 1000 mini bounding box
 
-o3d.visualization.draw_geometries([downpcd, downpcd2, bbox] + list_overlap_mini_boxes)
+if FLAG_VISUALIZE:
+    o3d.visualization.draw_geometries([downpcd, downpcd2, bbox] + list_overlap_mini_boxes)
 
 
 ######### Visualize the subset of points
@@ -111,8 +126,10 @@ subset_pcd2 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(subset_pcd2))
 subset_pcd2.paint_uniform_color([1, 0.5, 0.5])
 
 
+
 print("les points qui s'overlappent sont affiches en rose")
-o3d.visualization.draw_geometries([downpcd, downpcd2, subset_pcd1, subset_pcd2])
+if FLAG_VISUALIZE:
+    o3d.visualization.draw_geometries([downpcd, downpcd2, subset_pcd1, subset_pcd2])
 
 
 
@@ -126,7 +143,8 @@ bbox_overlap = o3d.geometry.AxisAlignedBoundingBox.create_from_points(overlap_pc
 #on cree une bounding box qui entoure les deux nuages
 bbox_overlap.color = [1, 0, 0]
 
-o3d.visualization.draw_geometries([downpcd, downpcd2, bbox_overlap])
+if FLAG_VISUALIZE:
+    o3d.visualization.draw_geometries([downpcd, downpcd2, bbox_overlap])
 
 
 #on garde les points de pc1 et pc2 qui sont dans bbox_overlap : attention , on ne prend pas le downsampled point cloud mais le point cloud original
@@ -145,16 +163,29 @@ bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, coords
 coords_subset_pcd1 = coords[bool_has_points_from_cloud1]
 coords_subset_pcd2 = coords2[bool_has_points_from_cloud2]
 
+## time stamp
+coords1_time_stamp = coords1_time_stamp[bool_has_points_from_cloud1]
+coords2_time_stamp = coords2_time_stamp[bool_has_points_from_cloud2]
+
+print("1er subset a ",len(coords_subset_pcd1),"points et timestamp a ",len(coords1_time_stamp))
+print("2eme subset a ",len(coords_subset_pcd2),"points et timestamp a ",len(coords2_time_stamp))
+
+
 subset_pcd1 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(coords_subset_pcd1))
 # jaune
 subset_pcd1.paint_uniform_color([0, 1, 1])
 subset_pcd2 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(coords_subset_pcd2))
 subset_pcd2.paint_uniform_color([1, 0,0])
 
-o3d.visualization.draw_geometries([subset_pcd1, subset_pcd2])
+
+if FLAG_VISUALIZE:
+    o3d.visualization.draw_geometries([subset_pcd1, subset_pcd2])
 
 
 
-#save the 2 point clouds
-o3d.io.write_point_cloud("/home/sdi-2023-01/Bureau/epfl/Data_pcd/pcd1.ply", subset_pcd1)
-o3d.io.write_point_cloud("/home/sdi-2023-01/Bureau/epfl/Data_pcd/pcd2.ply", subset_pcd2)
+#save the 2 point clouds as txt with 4 columns : x y z timestamp
+new_coords1 = np.hstack((coords_subset_pcd1, np.expand_dims(coords1_time_stamp, axis=1)))
+new_coords2 = np.hstack((coords_subset_pcd2, np.expand_dims(coords2_time_stamp, axis=1)))
+
+np.savetxt("/home/sdi-2023-01/Bureau/epfl/Data_pcd/85268 - M230905_223260_223320_LEFT.txt", new_coords1, delimiter=" ", fmt="%s")
+np.savetxt("/home/sdi-2023-01/Bureau/epfl/Data_pcd/85268 - M230905_223260_223320_RIGHT.txt", new_coords2, delimiter=" ", fmt="%s")

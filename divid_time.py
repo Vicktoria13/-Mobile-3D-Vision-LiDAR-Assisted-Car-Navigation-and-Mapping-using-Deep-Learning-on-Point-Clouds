@@ -8,6 +8,9 @@ import polyscope as ps
 
 infile = laspy.read("/home/sdi-2023-01/Downloads/85268 - M230905_217740_217756_RIGHT.laz")
 
+timestamp = infile.gps_time
+timestamp = np.array(timestamp)
+np.savetxt("/home/sdi-2023-01/Bureau/_timestamp.txt", timestamp, delimiter=" ", fmt="%s")
 
 print("il y a ",infile.header.point_count,"points dans le fichier")
 
@@ -23,8 +26,13 @@ print("le max des gps time est ",max(infile.gps_time))
 import numpy as np
 sorted_indices = np.argsort(infile.gps_time)
 
+
+print("les indices triés sont ",sorted_indices)
+print("min de sorted_indices ",min(sorted_indices))
+print("max de sorted_indices ",max(sorted_indices))
 #on peut ensuite utiliser ces indices pour trier les points
 sorted_points = infile.points[sorted_indices]
+
 
 
 sorted_point_xyz = np.vstack((sorted_points.x, sorted_points.y, sorted_points.z)).transpose()
