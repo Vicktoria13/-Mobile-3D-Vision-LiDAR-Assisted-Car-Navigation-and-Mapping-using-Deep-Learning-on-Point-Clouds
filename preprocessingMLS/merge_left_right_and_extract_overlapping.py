@@ -66,6 +66,9 @@ def merge_left_right(path_left, path_right):
     #merge les temps
     time = np.vstack((time_right, time_left))
 
+    print("in merge_left_right : ", coords.shape, time.shape)
+    assert coords.shape[0] == time.shape[0]
+    
     return coords, time
 
 
@@ -285,6 +288,7 @@ def main():
         logger.info("=== Found the LEFT and RIGHT clouds of " + id2)
 
         #################### 3. Merge the left and right clouds of the pair
+        # time1 est un array avec les temps des points du nuage de points 1 (LEFT + RIGHT)
 
         logger.info("=== Merging the LEFT and RIGHT clouds of " + id1)
         merged_cloud_id1, time1 = merge_left_right(path_left_id1, path_right_id1)
