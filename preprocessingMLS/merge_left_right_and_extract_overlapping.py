@@ -327,6 +327,15 @@ def main():
     ## SAVE THE SUBSET OF POINTS as a txt file : 
     # pour s'adapter facilement : rajout de 1 colonne de 0 au debut et 3 colonnes de 0 a la fin
 
+    #mettre la colonne 0 = temps + 3 colonnes de 0 a la fin
+
+    new_coords_pcd1 = np.hstack((time_overlapping_point1, overlapped_merged1, np.zeros((overlapped_merged1.shape[0], 3))))
+    new_coords_pcd2 = np.hstack((time_overlapping_point2, overlapped_merged2, np.zeros((overlapped_merged2.shape[0], 3))))
+
+    print("new_coords_pcd1 : ", new_coords_pcd1.shape)
+    print("new_coords_pcd2 : ", new_coords_pcd2.shape)
+
+    """
     new_coords_pcd1 = np.hstack((np.zeros((overlapped_merged1.shape[0], 1)), 
                                  overlapped_merged1, 
                                  np.zeros((overlapped_merged1.shape[0], 3))))
@@ -334,17 +343,8 @@ def main():
     new_coords_pcd2 = np.hstack((np.zeros((overlapped_merged2.shape[0], 1)), 
                                  overlapped_merged2, 
                                  np.zeros((overlapped_merged2.shape[0], 3))))
-    
-    #mettre la colonne 0 = temps
+    """
 
-    print("time_overlapping_point1", time_overlapping_point1.shape)
-    print("time_overlapping_point2", time_overlapping_point2.shape)
-
-    print("new_coords_pcd1", new_coords_pcd1.shape)
-    print("new_coords_pcd2", new_coords_pcd2.shape)
-    
-    new_coords_pcd1[:,0] = time_overlapping_point1
-    new_coords_pcd2[:,0] = time_overlapping_point2
 
 
     #save pcd1
