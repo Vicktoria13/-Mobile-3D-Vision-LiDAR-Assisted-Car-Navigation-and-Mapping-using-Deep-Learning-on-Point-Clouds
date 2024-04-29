@@ -53,11 +53,12 @@ def merge_left_right(path_left, path_right):
 
     right = laspy.read(path_right)
     coords_right = np.vstack((right.x, right.y, right.z)).transpose()
-    time_right = np.vstack((right.gps_time)).transpose()
+    time_right = np.vstack((right.gps_time))
+
 
     left = laspy.read(path_left)
     coords_left = np.vstack((left.x, left.y, left.z)).transpose()
-    time_left = np.vstack((left.gps_time)).transpose()
+    time_left = np.vstack((left.gps_time))
 
     #merge les 2
     coords = np.vstack((coords_right, coords_left))
@@ -65,12 +66,11 @@ def merge_left_right(path_left, path_right):
 
     #merge les temps
     time = np.vstack((time_right, time_left))
+    time = np.asarray(time)
 
-    print("in merge_left_right : ", coords.shape, time.shape)
+
     assert coords.shape[0] == time.shape[0]
-    
     return coords, time
-
 
 
 
@@ -336,6 +336,13 @@ def main():
                                  np.zeros((overlapped_merged2.shape[0], 3))))
     
     #mettre la colonne 0 = temps
+
+    print("time_overlapping_point1", time_overlapping_point1.shape)
+    print("time_overlapping_point2", time_overlapping_point2.shape)
+
+    print("new_coords_pcd1", new_coords_pcd1.shape)
+    print("new_coords_pcd2", new_coords_pcd2.shape)
+    
     new_coords_pcd1[:,0] = time_overlapping_point1
     new_coords_pcd2[:,0] = time_overlapping_point2
 
