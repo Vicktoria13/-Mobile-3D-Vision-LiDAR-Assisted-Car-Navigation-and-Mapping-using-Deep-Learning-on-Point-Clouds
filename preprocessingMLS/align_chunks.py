@@ -16,7 +16,12 @@ import argparse
 """
 
 Input : Chunk A and Chunk B, in .txt format
-ChunkA.txt and ChunkB.txt are the point clouds of the two chunks : 7 columns. X Y Z are columns 2 3 4
+ChunkA.txt and ChunkB.txt are the point clouds of the two chunk.
+
+Input shape  : [ id time x y z 0 0 0 ]
+Output shape : [ id time x y z 0 0 0 ]
+
+(the 3 0 are equivalent to laz vectoris, not available in MLS case)
 
 Output : ChunkA_aligned.txt and ChunkB_aligned.txt, in .txt format
 
@@ -67,7 +72,13 @@ def main():
     point_pcd1 = (np.loadtxt(args.path1, delimiter=delim))[:,2:5]
     point_pcd2 = (np.loadtxt(args.path2, delimiter=delim))[:,2:5]
 
+    #pour le temps, on garde la colonne 1
+    time_pcd1 = (np.loadtxt(args.path1, delimiter=delim))[:,1]
+    time_pcd2 = (np.loadtxt(args.path2, delimiter=delim))[:,1]
 
+    #pour l'id, on garde la colonne 0
+    id_pcd1 = (np.loadtxt(args.path1, delimiter=delim))[:,0]
+    id_pcd2 = (np.loadtxt(args.path2, delimiter=delim))[:,0]
 
     pcd1 = o3d.geometry.PointCloud()
     pcd2 = o3d.geometry.PointCloud()
@@ -177,12 +188,25 @@ def main():
 
 
 
-    ### SIMPLE ICP : overwrite the original files
-    np.savetxt(root_path + name_pcd1 + ".txt", (np.concatenate((np.zeros((np.asarray(result_pcd1_SIMPLE_ICP.points).shape[0],2)), np.asarray(result_pcd1_SIMPLE_ICP.points), np.zeros((np.asarray(result_pcd1_SIMPLE_ICP.points).shape[0],3))), axis=1)), delimiter=delim)
-    np.savetxt(root_path + name_pcd2 + ".txt", (np.concatenate((np.zeros((np.asarray(pcd2.points).shape[0],2)), np.asarray(pcd2.points), np.zeros((np.asarray(pcd2.points).shape[0],3))), axis=1)), delimiter=delim)
+    ### SIMPLE ICP : overwrite the original files.
+    # Shape : [id time x y z 0 0 0]
+    
+    
+    to_save1 = np.hstack((id_pcd1.reshape(-1,1), 
+                          time_pcd1.reshape(-1,1), 
+                          np.array(result_pcd1_SIMPLE_ICP.points), 
+                          np.zeros((len(result_pcd1_SIMPLE_ICP.points), 3) )))
+    
+    to_save2 = np.hstack((id_pcd2.reshape(-1,1),
+                            time_pcd2.reshape(-1,1),
+                            np.array(shifted_pcd2_o3d.points),
+                            np.zeros((len(shifted_pcd2_o3d.points), 3) )))
+    
+    np.savetxt(root_path + name_pcd1 + ".txt", to_save1, delimiter=delim)
+    np.savetxt(root_path + name_pcd2 + ".txt", to_save2, delimiter=delim)
 
     
-
+    
 
     logging.info("Program finished ...")
 
