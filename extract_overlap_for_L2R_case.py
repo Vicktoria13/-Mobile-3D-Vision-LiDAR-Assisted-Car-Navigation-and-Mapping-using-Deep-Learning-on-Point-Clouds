@@ -103,6 +103,9 @@ def main():
     array_pcd1 = np.array(downpcd.points)
     array_pcd2 = np.array(downpcd2.points)
 
+    a1 = np.array(pcd1.points)
+    a2 = np.array(pcd2.points)
+
     ###### BOUNDING BOXES ######
     bbox = o3d.geometry.AxisAlignedBoundingBox.create_from_points(o3d.utility.Vector3dVector(np.concatenate((array_pcd1, array_pcd2), axis=0)))
     bbox.color = [1, 0, 0]
@@ -159,10 +162,9 @@ def main():
             list_overlap_mini_boxes.append(mini_box_test)
             
             #dans ce cas la, on construit subset_pcd1 et subset_pcd2 qui contiennent les points des 2 clouds originels (coords et coords2) qui sont dans la bounding box
-            
-            subset_pcd1 = np.concatenate((subset_pcd1, coords[bool_has_points_from_cloud1]), axis=0)
-            subset_pcd2 = np.concatenate((subset_pcd2, coords2[bool_has_points_from_cloud2]), axis=0)
-
+            #attention dimensions
+            subset_pcd1 = np.concatenate((subset_pcd1, a1[bool_has_points_from_cloud1]), axis=0)
+            subset_pcd2 = np.concatenate((subset_pcd2, a2[bool_has_points_from_cloud2]), axis=0)
 
         #for display ==> loading bar
         cmpt += 1
