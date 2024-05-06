@@ -97,8 +97,8 @@ def main():
 
 
     #########  DOWNSAMPLING car on n'a pas besoin d'autant de points pour trouver l'overlap
-    downpcd = pcd1.voxel_down_sample(voxel_size=0.01)
-    downpcd2 = pcd2.voxel_down_sample(voxel_size=0.01)
+    downpcd = pcd1.voxel_down_sample(voxel_size=0.05)
+    downpcd2 = pcd2.voxel_down_sample(voxel_size=0.05)
 
     array_pcd1 = np.array(downpcd.points)
     array_pcd2 = np.array(downpcd2.points)
@@ -123,28 +123,10 @@ def main():
                 mini_bbox.color = [1, 0, 1]
                 list_mini_boxes.append(mini_bbox)
     
-
     
-    #fusionner toutes les mini box en une seule pour obtenir un polygone
-    #on peut utiliser la fonction create_from_axis_aligned_bounding_box
-                
-    poly = o3d.geometry.TriangleMesh.create_from_axis_aligned_bounding_box(bbox)
-    poly.paint_uniform_color([0.1, 0.1, 0.1])
+    if args.visualize:
+        o3d.visualization.draw_geometries([downpcd, downpcd2, bbox] + list_mini_boxes)
 
-
-    #on regarde les points de chaque nuages qui sont dans ce polygone poly
-    #on garde les points de chaque nuage qui sont dans le polygone poly
-    bool_has_points_from_cloud1 = np.logical_and(poly.vertices[:, 0] <= array_pcd1[:, 0], array_pcd1[:, 0] <= poly.vertices[:, 1])
-    bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, poly.vertices[:, 1] <= array_pcd1[:, 1])
-    bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, array_pcd1[:, 1] <= poly.vertices[:, 2])
-    bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, poly.vertices[:, 2] <= array_pcd1[:, 2])
-
-
-    bool_has_points_from_cloud2 = np.logical_and(poly.vertices[:, 0] <= array_pcd2[:, 0], array_pcd2[:, 0] <= poly.vertices[:, 1])
-    bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, poly.vertices[:, 1] <= array_pcd2[:, 1])
-    bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, array_pcd2[:, 1] <= poly.vertices[:, 2])
-    bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, poly.vertices[:, 2] <= array_pcd2[:, 2])
-    
     
     ###### List of mini box which contains points from both clouds ######
         
@@ -176,6 +158,13 @@ def main():
         bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, array_pcd2[:, 2] <= mini_box_test.max_bound[2])
 
 
+        """
+
+        #celui la prend 5 fois plus de temps !!
+        bool_has_points_from_cloud1 = np.all(np.logical_and(mini_box_test.min_bound <= array_pcd1, array_pcd1 <= mini_box_test.max_bound), axis=1)
+        bool_has_points_from_cloud2 = np.all(np.logical_and(mini_box_test.min_bound <= array_pcd2, array_pcd2 <= mini_box_test.max_bound), axis=1)
+
+        """
 
         if np.any(bool_has_points_from_cloud1) and np.any(bool_has_points_from_cloud2):
             list_overlap_mini_boxes.append(mini_box_test)
