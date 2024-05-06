@@ -78,7 +78,6 @@ def main():
     #coords is [t x y z 0 0 0]
     #onlu keep the 3 xyz columns
     coords = coords[:, 1:4]
-    coords2 = coords2[:, 1:4]
 
 
     print("coords1 shape : ", coords.shape)
@@ -188,6 +187,9 @@ def main():
     subset_pcd2 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(subset_pcd2))
     subset_pcd2.paint_uniform_color([1, 0.5, 0.5])
 
+
+    print("bool_has_points_from_cloud2 shape : ", bool_has_points_from_cloud2.shape)
+    #here, bool_has_points_from_cloud2 has the same shape as coords2
     coords_subset_pcd1 = coords[bool_has_points_from_cloud1]
     coords_subset_pcd2 = coords2[bool_has_points_from_cloud2]
 
