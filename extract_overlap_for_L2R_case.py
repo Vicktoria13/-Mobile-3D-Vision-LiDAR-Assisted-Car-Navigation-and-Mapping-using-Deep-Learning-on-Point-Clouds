@@ -78,6 +78,7 @@ def main():
     #coords is [t x y z 0 0 0]
     #onlu keep the 3 xyz columns
     coords = coords[:, 1:4]
+    coords2 = coords2[:, 1:4]
 
 
     print("coords1 shape : ", coords.shape)
@@ -96,8 +97,8 @@ def main():
 
 
     #########  DOWNSAMPLING car on n'a pas besoin d'autant de points pour trouver l'overlap
-    downpcd = pcd1.voxel_down_sample(voxel_size=1)
-    downpcd2 = pcd2.voxel_down_sample(voxel_size=1)
+    downpcd = pcd1.voxel_down_sample(voxel_size=0.01)
+    downpcd2 = pcd2.voxel_down_sample(voxel_size=0.01)
 
     array_pcd1 = np.array(downpcd.points)
     array_pcd2 = np.array(downpcd2.points)
@@ -122,9 +123,6 @@ def main():
                 mini_bbox.color = [1, 0, 1]
                 list_mini_boxes.append(mini_bbox)
     
-    
-    if args.visualize:
-        o3d.visualization.draw_geometries([downpcd, downpcd2, bbox] + list_mini_boxes)
 
     
     ###### List of mini box which contains points from both clouds ######
@@ -142,6 +140,8 @@ def main():
 
     for mini_box_test in list_mini_boxes:
     
+
+        #on garde les points de la cloud1 et cloud2 qui sont dans la mini box courante
         bool_has_points_from_cloud1 = np.logical_and(mini_box_test.min_bound[0] <= array_pcd1[:, 0], array_pcd1[:, 0] <= mini_box_test.max_bound[0])
         bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, mini_box_test.min_bound[1] <= array_pcd1[:, 1])
         bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, array_pcd1[:, 1] <= mini_box_test.max_bound[1])
@@ -155,16 +155,10 @@ def main():
         bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, array_pcd2[:, 2] <= mini_box_test.max_bound[2])
 
 
-        """
-
-        #celui la prend 5 fois plus de temps !!
-        bool_has_points_from_cloud1 = np.all(np.logical_and(mini_box_test.min_bound <= array_pcd1, array_pcd1 <= mini_box_test.max_bound), axis=1)
-        bool_has_points_from_cloud2 = np.all(np.logical_and(mini_box_test.min_bound <= array_pcd2, array_pcd2 <= mini_box_test.max_bound), axis=1)
-
-        """
 
         if np.any(bool_has_points_from_cloud1) and np.any(bool_has_points_from_cloud2):
             list_overlap_mini_boxes.append(mini_box_test)
+            #subset_pcd1 = represente les points de la cloud1 qui sont dans la mini box courante
             subset_pcd1 = np.concatenate((subset_pcd1, array_pcd1[bool_has_points_from_cloud1]), axis=0)
             subset_pcd2 = np.concatenate((subset_pcd2, array_pcd2[bool_has_points_from_cloud2]), axis=0)
 
@@ -180,31 +174,8 @@ def main():
         o3d.visualization.draw_geometries([downpcd, downpcd2] + list_overlap_mini_boxes)
 
     
-
-    ############## 
-    subset_pcd1 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(subset_pcd1))
-    subset_pcd1.paint_uniform_color([1, 0.5, 0.5])
-    subset_pcd2 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(subset_pcd2))
-    subset_pcd2.paint_uniform_color([1, 0.5, 0.5])
-
-
-    print("bool_has_points_from_cloud2 shape : ", bool_has_points_from_cloud2.shape)
-    #here, bool_has_points_from_cloud2 has the same shape as coords2
-    coords_subset_pcd1 = coords[bool_has_points_from_cloud1]
-    coords_subset_pcd2 = coords2[bool_has_points_from_cloud2]
-
-    subset_pcd1 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(coords_subset_pcd1))
-    # jaune
-    subset_pcd1.paint_uniform_color([0, 1, 1])
-    subset_pcd2 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(coords_subset_pcd2))
-    subset_pcd2.paint_uniform_color([1, 0,0])
-
-    if args.visualize:
-        o3d.visualization.draw_geometries([subset_pcd1, subset_pcd2])
-
-
-    print("subset 1 has ", coords_subset_pcd1.shape[0], " points")
-    print("subset 2 has ", coords_subset_pcd2.shape[0], " points")
+    coords_subset_pcd1 = np.array(subset_pcd1)
+    coords_subset_pcd2 = np.array(subset_pcd2)
 
     ## SAVE THE SUBSET OF POINTS as a txt file : 
     # pour s'adapter facilement : rajout de 1 colonne de 0 au debut et 3 colonnes de 0 a la fin
