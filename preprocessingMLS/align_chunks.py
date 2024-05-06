@@ -21,6 +21,13 @@ ChunkA.txt and ChunkB.txt are the point clouds of the two chunk.
 Input shape  : [ id time x y z 0 0 0 ]
 Output shape : [ id time x y z 0 0 0 ]
 
+id : int
+time : float a 10^-8
+x : float a 10^-4
+y : float a 10^-4
+z : float a 10^-4
+0 0 0 : float a 10^-4
+
 (the 3 0 are equivalent to laz vectoris, not available in MLS case)
 
 Output : ChunkA_aligned.txt and ChunkB_aligned.txt, in .txt format
@@ -197,10 +204,11 @@ def main():
                           np.array(result_pcd1_SIMPLE_ICP.points), 
                           np.zeros((len(result_pcd1_SIMPLE_ICP.points), 3) )))
     
-    to_save2 = np.hstack((id_pcd2.reshape(-1,1),
-                            time_pcd2.reshape(-1,1),
-                            np.array(shifted_pcd2_o3d.points),
-                            np.zeros((len(shifted_pcd2_o3d.points), 3) )))
+    #pour pcd 2 : pcd2.points
+    to_save2 = np.hstack((id_pcd2.reshape(-1,1), 
+                          time_pcd2.reshape(-1,1), 
+                          np.array(pcd2.points),
+                            np.zeros((len(pcd2.points), 3) ))) #on rajoute 3 colonnes de 0 à la fin
     
     np.savetxt(root_path + name_pcd1 + ".txt", to_save1, delimiter=delim)
     np.savetxt(root_path + name_pcd2 + ".txt", to_save2, delimiter=delim)
