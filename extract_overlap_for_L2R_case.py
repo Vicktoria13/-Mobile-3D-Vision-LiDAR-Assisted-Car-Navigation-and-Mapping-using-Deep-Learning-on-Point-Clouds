@@ -155,6 +155,14 @@ def main():
         bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, array_pcd2[:, 2] <= mini_box_test.max_bound[2])
 
 
+        """
+
+        #celui la prend 5 fois plus de temps !!
+        bool_has_points_from_cloud1 = np.all(np.logical_and(mini_box_test.min_bound <= array_pcd1, array_pcd1 <= mini_box_test.max_bound), axis=1)
+        bool_has_points_from_cloud2 = np.all(np.logical_and(mini_box_test.min_bound <= array_pcd2, array_pcd2 <= mini_box_test.max_bound), axis=1)
+
+        """
+
         if np.any(bool_has_points_from_cloud1) and np.any(bool_has_points_from_cloud2):
             list_overlap_mini_boxes.append(mini_box_test)
             subset_pcd1 = np.concatenate((subset_pcd1, array_pcd1[bool_has_points_from_cloud1]), axis=0)
@@ -171,7 +179,7 @@ def main():
     if args.visualize:
         o3d.visualization.draw_geometries([downpcd, downpcd2] + list_overlap_mini_boxes)
 
-    #a ce stade, subset_pcd1 et subset_pcd2 contiennent les points des 2 clouds qui sont dans les bounding boxes qui contiennent des points des 2 clouds
+    
 
     ############## 
     subset_pcd1 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(subset_pcd1))
@@ -180,24 +188,30 @@ def main():
     subset_pcd2.paint_uniform_color([1, 0.5, 0.5])
 
 
+    coords_subset_pcd1 = coords[bool_has_points_from_cloud1]
+    coords_subset_pcd2 = coords2[bool_has_points_from_cloud2]
+
+    subset_pcd1 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(coords_subset_pcd1))
+    subset_pcd1.paint_uniform_color([0, 1, 1])
+    subset_pcd2 = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(coords_subset_pcd2))
+    subset_pcd2.paint_uniform_color([1, 0,0])
+
     if args.visualize:
-        o3d.visualization.draw_geometries([downpcd, downpcd2])
+        o3d.visualization.draw_geometries([subset_pcd1, subset_pcd2])
 
 
-
-
-    print("subset 1 has ", subset_pcd1.shape[0], " points")
-    print("subset 2 has ", subset_pcd2.shape[0], " points")
+    print("subset 1 has ", coords_subset_pcd1.shape[0], " points")
+    print("subset 2 has ", coords_subset_pcd2.shape[0], " points")
 
     ## SAVE THE SUBSET OF POINTS as a txt file : 
     # pour s'adapter facilement : rajout de 1 colonne de 0 au debut et 3 colonnes de 0 a la fin
     
-    new_coords_pcd1 = np.hstack((np.zeros((subset_pcd1.shape[0],1)), subset_pcd1))
-    new_coords_pcd1 = np.hstack((new_coords_pcd1, np.zeros((subset_pcd1.shape[0],3))))
+    new_coords_pcd1 = np.hstack((np.zeros((coords_subset_pcd1.shape[0],1)), coords_subset_pcd1))
+    new_coords_pcd1 = np.hstack((new_coords_pcd1, np.zeros((coords_subset_pcd1.shape[0],3))))
     np.savetxt(args.output + "/pcd1.txt", new_coords_pcd1, delimiter=" ", fmt="%s")
 
-    new_coords_pcd2 = np.hstack((np.zeros((subset_pcd2.shape[0],1)), subset_pcd2))
-    new_coords_pcd2 = np.hstack((new_coords_pcd2, np.zeros((subset_pcd2.shape[0],3))))
+    new_coords_pcd2 = np.hstack((np.zeros((coords_subset_pcd2.shape[0],1)), coords_subset_pcd2))
+    new_coords_pcd2 = np.hstack((new_coords_pcd2, np.zeros((coords_subset_pcd2.shape[0],3))))
     np.savetxt(args.output + "/pcd2.txt", new_coords_pcd2, delimiter=" ", fmt="%s")
     
     logging.info("End of the program ...")
