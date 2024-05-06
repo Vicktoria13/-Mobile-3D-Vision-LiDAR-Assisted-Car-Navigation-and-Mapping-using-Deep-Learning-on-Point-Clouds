@@ -131,9 +131,6 @@ def main():
     poly = o3d.geometry.TriangleMesh.create_from_axis_aligned_bounding_box(bbox)
     poly.paint_uniform_color([0.1, 0.1, 0.1])
 
-    if args.visualize:
-        o3d.visualization.draw_geometries([downpcd, downpcd2, poly])
-
 
     #on regarde les points de chaque nuages qui sont dans ce polygone poly
     #on garde les points de chaque nuage qui sont dans le polygone poly
@@ -147,25 +144,73 @@ def main():
     bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, poly.vertices[:, 1] <= array_pcd2[:, 1])
     bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, array_pcd2[:, 1] <= poly.vertices[:, 2])
     bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, poly.vertices[:, 2] <= array_pcd2[:, 2])
+    
+    
+    ###### List of mini box which contains points from both clouds ######
+        
+    list_overlap_mini_boxes = []
+    subset_pcd1 = np.zeros((0, 3))
+    subset_pcd2 = np.zeros((0, 3))
 
-    #on garde les points qui sont dans le polygone
-    points_cloud1 = coords[bool_has_points_from_cloud1]
-    points_cloud2 = coords2[bool_has_points_from_cloud2]
+    start_time = time.time()
 
-    #on cree un nuage de points avec ces points
-    pcd1_in_poly = o3d.geometry.PointCloud()
-    pcd1_in_poly.points = o3d.utility.Vector3dVector(points_cloud1)
+    logging.info("Start of the loop ...")
 
-    pcd2_in_poly = o3d.geometry.PointCloud()
-    pcd2_in_poly.points = o3d.utility.Vector3dVector(points_cloud2)
+    nb_mini_boxes = len(list_mini_boxes)
+    cmpt  = 0
+
+    for mini_box_test in list_mini_boxes:
+    
+
+        #on garde les points de la cloud1 et cloud2 qui sont dans la mini box courante
+        bool_has_points_from_cloud1 = np.logical_and(mini_box_test.min_bound[0] <= array_pcd1[:, 0], array_pcd1[:, 0] <= mini_box_test.max_bound[0])
+        bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, mini_box_test.min_bound[1] <= array_pcd1[:, 1])
+        bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, array_pcd1[:, 1] <= mini_box_test.max_bound[1])
+        bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, mini_box_test.min_bound[2] <= array_pcd1[:, 2])
+        bool_has_points_from_cloud1 = np.logical_and(bool_has_points_from_cloud1, array_pcd1[:, 2] <= mini_box_test.max_bound[2])
+
+        bool_has_points_from_cloud2 = np.logical_and(mini_box_test.min_bound[0] <= array_pcd2[:, 0], array_pcd2[:, 0] <= mini_box_test.max_bound[0])
+        bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, mini_box_test.min_bound[1] <= array_pcd2[:, 1])
+        bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, array_pcd2[:, 1] <= mini_box_test.max_bound[1])
+        bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, mini_box_test.min_bound[2] <= array_pcd2[:, 2])
+        bool_has_points_from_cloud2 = np.logical_and(bool_has_points_from_cloud2, array_pcd2[:, 2] <= mini_box_test.max_bound[2])
+
+
+
+        if np.any(bool_has_points_from_cloud1) and np.any(bool_has_points_from_cloud2):
+            list_overlap_mini_boxes.append(mini_box_test)
+            #subset_pcd1 = represente les points de la cloud1 qui sont dans la mini box courante
+            subset_pcd1 = np.concatenate((subset_pcd1, array_pcd1[bool_has_points_from_cloud1]), axis=0)
+            subset_pcd2 = np.concatenate((subset_pcd2, array_pcd2[bool_has_points_from_cloud2]), axis=0)
+
+
+        #for display ==> loading bar
+        cmpt += 1
+        print("\r", "Progression : ", cmpt/nb_mini_boxes*100, "%", end="")
+
+    logging.info("--- %s seconds ---" % (time.time() - start_time))
+    logging.info(len(list_overlap_mini_boxes)) 
 
     if args.visualize:
-        o3d.visualization.draw_geometries([pcd1_in_poly, pcd2_in_poly])
+        o3d.visualization.draw_geometries([downpcd, downpcd2] + list_overlap_mini_boxes)
 
-        
+    
+    coords_subset_pcd1 = np.array(subset_pcd1)
+    coords_subset_pcd2 = np.array(subset_pcd2)
 
+    ## SAVE THE SUBSET OF POINTS as a txt file : 
+    # pour s'adapter facilement : rajout de 1 colonne de 0 au debut et 3 colonnes de 0 a la fin
+    
+    new_coords_pcd1 = np.hstack((np.zeros((coords_subset_pcd1.shape[0],1)), coords_subset_pcd1))
+    new_coords_pcd1 = np.hstack((new_coords_pcd1, np.zeros((coords_subset_pcd1.shape[0],3))))
+    np.savetxt(args.output + "/pcd1.txt", new_coords_pcd1, delimiter=" ", fmt="%s")
 
-   
+    new_coords_pcd2 = np.hstack((np.zeros((coords_subset_pcd2.shape[0],1)), coords_subset_pcd2))
+    new_coords_pcd2 = np.hstack((new_coords_pcd2, np.zeros((coords_subset_pcd2.shape[0],3))))
+    np.savetxt(args.output + "/pcd2.txt", new_coords_pcd2, delimiter=" ", fmt="%s")
+    
+    logging.info("End of the program ...")
+    
     
     return 0
 
