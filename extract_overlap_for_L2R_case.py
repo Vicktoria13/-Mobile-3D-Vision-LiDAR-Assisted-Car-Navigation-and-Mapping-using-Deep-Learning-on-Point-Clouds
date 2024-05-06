@@ -78,6 +78,7 @@ def main():
     #coords is [t x y z 0 0 0]
     #onlu keep the 3 xyz columns
     coords = coords[:, 1:4]
+    coords2 = coords2[:, 1:4]
 
 
     print("coords1 shape : ", coords.shape)
