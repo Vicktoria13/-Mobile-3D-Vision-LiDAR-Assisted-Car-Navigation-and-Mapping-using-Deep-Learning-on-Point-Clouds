@@ -119,11 +119,12 @@ def merge_left_right_CSV(path_left, path_right):
     provenance_right = np.zeros((xyz_right.shape[0], 1))
 
 
-    #on merge les 2 nuages de points
-    xyz = np.vstack((xyz_left, xyz_right))
-    laz_vector = np.vstack((laz_vector_left, laz_vector_right))
-    time_vector = np.vstack((time_vector_left, time_vector_right))
-    provenance_vector = np.vstack((provenance_left, provenance_right))
+    #on merge les 2 nuages de points concatene
+    xyz = np.concatenate((xyz_left, xyz_right), axis=0)
+    laz_vector = np.concatenate((laz_vector_left, laz_vector_right), axis=0)
+    time_vector = np.concatenate((time_vector_left, time_vector_right), axis=0)
+    provenance_vector = np.concatenate((provenance_left, provenance_right), axis=0)
+    
 
     return xyz, laz_vector, time_vector, provenance_vector
 
