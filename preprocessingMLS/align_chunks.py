@@ -92,6 +92,10 @@ def main():
     provenance_pcd1 = (np.loadtxt(args.path1, delimiter=delim))[:,8]
     provenance_pcd2 = (np.loadtxt(args.path2, delimiter=delim))[:,8]
 
+    
+
+
+
 
     pcd1 = o3d.geometry.PointCloud()
     pcd2 = o3d.geometry.PointCloud()
@@ -192,7 +196,11 @@ def main():
         
     result_pcd1_SIMPLE_ICP.points = o3d.utility.Vector3dVector(np.array(result_pcd1_SIMPLE_ICP.points) + np.array([x_shift_both, y_shift_both, z_shift_both]))
 
+    #convertir en liste
+    result_pcd1_SIMPLE_ICP = np.array(result_pcd1_SIMPLE_ICP.points)
 
+
+    
 
 
     logging.info("Saving the aligned point clouds ...")
@@ -204,20 +212,26 @@ def main():
     ### SIMPLE ICP : overwrite the original files.
     # Shape : [id time x y z 0 0 0]
     
+    provenance_pcd1  = provenance_pcd1.reshape(-1,1)
+    provenance_pcd2  = provenance_pcd2.reshape(-1,1)
+
     
     to_save1 = np.hstack((id_pcd1.reshape(-1,1), 
                           time_pcd1.reshape(-1,1), 
-                          np.array(result_pcd1_SIMPLE_ICP.points), 
-                          np.zeros((len(result_pcd1_SIMPLE_ICP.points), 3),
-                          provenance_pcd1.reshape(-1,1) ))) 
+                            np.array(result_pcd1_SIMPLE_ICP.points),
+                            np.zeros((len(result_pcd1_SIMPLE_ICP.points),3)),
+                            provenance_pcd1
+                            ))
     
-    #pour pcd 2 : pcd2.points
-    to_save2 = np.hstack((id_pcd2.reshape(-1,1), 
-                          time_pcd2.reshape(-1,1), 
-                          np.array(pcd2.points),
-                            np.zeros((len(pcd2.points), 3),
-                            provenance_pcd2.reshape(-1,1) )))
+
+    to_save2 = np.hstack((id_pcd2.reshape(-1,1),
+                            time_pcd2.reshape(-1,1),
+                                np.array(pcd2.points),
+                                np.zeros((len(pcd2.points),3)),
+                                provenance_pcd2
+                                ))
     
+
     np.savetxt(root_path + name_pcd1 + ".txt", to_save1, delimiter=delim)
     np.savetxt(root_path + name_pcd2 + ".txt", to_save2, delimiter=delim)
 

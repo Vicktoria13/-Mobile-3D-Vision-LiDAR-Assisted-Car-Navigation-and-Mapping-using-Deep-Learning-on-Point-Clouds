@@ -67,7 +67,6 @@ def main():
     # =============== ARGUMENTS ===============
     parser = argparse.ArgumentParser(description='ICPs')
     parser.add_argument('--path_tiles', type=str, help='Path to the tiles directory', required=True)
-    parser.add_argument('--visualize', action="store_true")
     args = parser.parse_args()
 
     pairs = extract_pairs(args.path_tiles)
@@ -80,13 +79,7 @@ def main():
 
     logging.info("Creating the .sh file ...")
 
-    print(" Visualze set to: ", args.visualize)
-    
-    if args.visualize:
-        str_visu = "--visualize True"
-    else:
-        str_visu = ""
-
+  
 
     #copy the tiles directory to tiles_non_aligned pour sauvegarder les fichiers originaux
     os.system(f"cp -r {args.path_tiles} {args.path_tiles[:-1] + '_non_aligned/'}")
