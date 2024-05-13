@@ -18,8 +18,8 @@ import argparse
 Input : Chunk A and Chunk B, in .txt format
 ChunkA.txt and ChunkB.txt are the point clouds of the two chunk.
 
-Input shape  : [ id time x y z 0 0 0 ]
-Output shape : [ id time x y z 0 0 0 ]
+Input shape  : [ id time x y z 0 0 0 provenance]
+Output shape : [ id time x y z 0 0 0 provenance]
 
 id : int
 time : float a 10^-8
@@ -86,6 +86,12 @@ def main():
     #pour l'id, on garde la colonne 0
     id_pcd1 = (np.loadtxt(args.path1, delimiter=delim))[:,0]
     id_pcd2 = (np.loadtxt(args.path2, delimiter=delim))[:,0]
+
+
+    # pour la provenance, on garde la colonne 8
+    provenance_pcd1 = (np.loadtxt(args.path1, delimiter=delim))[:,8]
+    provenance_pcd2 = (np.loadtxt(args.path2, delimiter=delim))[:,8]
+
 
     pcd1 = o3d.geometry.PointCloud()
     pcd2 = o3d.geometry.PointCloud()
@@ -202,13 +208,15 @@ def main():
     to_save1 = np.hstack((id_pcd1.reshape(-1,1), 
                           time_pcd1.reshape(-1,1), 
                           np.array(result_pcd1_SIMPLE_ICP.points), 
-                          np.zeros((len(result_pcd1_SIMPLE_ICP.points), 3) )))
+                          np.zeros((len(result_pcd1_SIMPLE_ICP.points), 3),
+                          provenance_pcd1.reshape(-1,1) ))) 
     
     #pour pcd 2 : pcd2.points
     to_save2 = np.hstack((id_pcd2.reshape(-1,1), 
                           time_pcd2.reshape(-1,1), 
                           np.array(pcd2.points),
-                            np.zeros((len(pcd2.points), 3) ))) #on rajoute 3 colonnes de 0 à la fin
+                            np.zeros((len(pcd2.points), 3),
+                            provenance_pcd2.reshape(-1,1) )))
     
     np.savetxt(root_path + name_pcd1 + ".txt", to_save1, delimiter=delim)
     np.savetxt(root_path + name_pcd2 + ".txt", to_save2, delimiter=delim)
