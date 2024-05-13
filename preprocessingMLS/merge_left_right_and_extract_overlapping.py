@@ -68,13 +68,17 @@ def merge_left_right(path_left, path_right):
     time = np.vstack((time_right, time_left))
     time = np.asarray(time)
 
+    #on stocke la provenance du point : 0 = right, 1 = left
+    provenance = np.zeros((coords_right.shape[0], 1))
+    provenance = np.vstack((provenance, np.ones((coords_left.shape[0], 1))))
+
 
     assert coords.shape[0] == time.shape[0]
-    return coords, time
+    return coords, time, provenance
 
 
 
-def extract_overlapping(merged_array_cloud1, merged_array_cloud2, time_array_cloud1, time_array_cloud2,visualize=False):
+def extract_overlapping(merged_array_cloud1, merged_array_cloud2, time_array_cloud1, time_array_cloud2, provenance1, provenance2,visualize=False):
 
     """
     Extract the overlapping area between two clouds
@@ -83,6 +87,8 @@ def extract_overlapping(merged_array_cloud1, merged_array_cloud2, time_array_clo
     time_array_cloud1 : np.array : the time array of the merged cloud 1 : array of shape (n, 1)
     time_array_cloud2 : np.array : the time array of the merged cloud 2 : array of shape (n, 1)
     visualize : bool : whether to visualize the overlapping using open3d
+    provenance1 : np.array : the provenance of the points of the merged cloud 1 : array of shape (n, 1). It has only 0 (or only 1) if not merged, or 0 and 1 if merged
+    
     """
 
     pcd1_merged = o3d.geometry.PointCloud()
@@ -215,8 +221,13 @@ def extract_overlapping(merged_array_cloud1, merged_array_cloud2, time_array_clo
     time_subset_pcd1 = time_array_cloud1[bool_has_points_from_cloud1]
     time_subset_pcd2 = time_array_cloud2[bool_has_points_from_cloud2]
 
+
+    #provenance
+    provenance_subset_pcd1 = provenance1[bool_has_points_from_cloud1]
+    provenance_subset_pcd2 = provenance2[bool_has_points_from_cloud2]
+
     
-    return coords_subset_pcd1, coords_subset_pcd2, time_subset_pcd1, time_subset_pcd2
+    return coords_subset_pcd1, coords_subset_pcd2, time_subset_pcd1, time_subset_pcd2, provenance_subset_pcd1, provenance_subset_pcd2
 
 
 
@@ -291,8 +302,8 @@ def main():
         # time1 est un array avec les temps des points du nuage de points 1 (LEFT + RIGHT)
 
         logger.info("=== Merging the LEFT and RIGHT clouds of " + id1)
-        merged_cloud_id1, time1 = merge_left_right(path_left_id1, path_right_id1)
-        merged_cloud_id2, time2 = merge_left_right(path_left_id2, path_right_id2)
+        merged_cloud_id1, time1, provenance1 = merge_left_right(path_left_id1, path_right_id1)
+        merged_cloud_id2, time2, provenance2 = merge_left_right(path_left_id2, path_right_id2)
 
     else:
 
@@ -314,36 +325,36 @@ def main():
         pcd1 = laspy.read(path_right_id1)
         pcd2 = laspy.read(path_right_id2)
 
-        time1 = np.vstack((pcd1.gps_time)).transpose()
-        time2 = np.vstack((pcd2.gps_time)).transpose()
+        time1 = np.vstack((pcd1.gps_time))
+        time2 = np.vstack((pcd2.gps_time))
 
         merged_cloud_id1 = np.vstack((pcd1.x, pcd1.y, pcd1.z)).transpose()
         merged_cloud_id2 = np.vstack((pcd2.x, pcd2.y, pcd2.z)).transpose()
 
+        #provenance
+        provenance1 = np.zeros((merged_cloud_id1.shape[0], 1))
+        provenance2 = np.zeros((merged_cloud_id2.shape[0], 1))
 
     ################### 4. Extract the overlapping
-    overlapped_merged1, overlapped_merged2, time_overlapping_point1, time_overlapping_point2 = extract_overlapping(merged_cloud_id1, merged_cloud_id2, time1, time2, visualize=args.visualize)
+    overlapped_merged1, overlapped_merged2, time_overlapping_point1, time_overlapping_point2, provenance_subset_pcd1, provenance_subset_pcd2 = extract_overlapping(merged_cloud_id1, merged_cloud_id2, time1, time2, provenance1, provenance2, visualize=args.visualize)
 
     ## SAVE THE SUBSET OF POINTS as a txt file : 
-    # pour s'adapter facilement : rajout de 1 colonne de 0 au debut et 3 colonnes de 0 a la fin
 
     #mettre la colonne 0 = temps + 3 colonnes de 0 a la fin
 
     new_coords_pcd1 = np.hstack((time_overlapping_point1, overlapped_merged1, np.zeros((overlapped_merged1.shape[0], 3))))
     new_coords_pcd2 = np.hstack((time_overlapping_point2, overlapped_merged2, np.zeros((overlapped_merged2.shape[0], 3))))
 
+    #on rajoute une derniere colonne pour la provenance
+    new_coords_pcd1 = np.hstack((new_coords_pcd1, provenance_subset_pcd1))
+    new_coords_pcd2 = np.hstack((new_coords_pcd2, provenance_subset_pcd2))
+
     print("new_coords_pcd1 : ", new_coords_pcd1.shape)
     print("new_coords_pcd2 : ", new_coords_pcd2.shape)
 
-    """
-    new_coords_pcd1 = np.hstack((np.zeros((overlapped_merged1.shape[0], 1)), 
-                                 overlapped_merged1, 
-                                 np.zeros((overlapped_merged1.shape[0], 3))))
-    
-    new_coords_pcd2 = np.hstack((np.zeros((overlapped_merged2.shape[0], 1)), 
-                                 overlapped_merged2, 
-                                 np.zeros((overlapped_merged2.shape[0], 3))))
-    """
+    ########
+    # t x y z 0 0 0 provenance
+
 
 
 
