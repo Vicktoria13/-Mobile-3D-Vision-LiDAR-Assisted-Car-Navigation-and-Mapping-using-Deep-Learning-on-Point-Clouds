@@ -311,7 +311,7 @@ def main():
 
     #get the arguments
     parser = argparse.ArgumentParser(description='Merge Left Right for each cloud of the pair + extract overlapping')
-    parser.add_argument('--data_las', type=str, help='The path to the folder containing the las files with R and L clouds')
+    parser.add_argument('--data_csv', type=str, help='The path to the folder containing the las files with R and L clouds')
     parser.add_argument('--id1', type=str, help='The ID of the first cloud')
     parser.add_argument('--id2', type=str, help='The ID of the second cloud')
 
@@ -320,7 +320,7 @@ def main():
 
     #################### 1. Get the arguments ####################
     args = parser.parse_args()
-    path_folder_data_las = args.data_las
+    path_folder_data_las = args.data_csv
     id1 = args.id1
     id2 = args.id2
     path_out_txt = args.out
