@@ -407,19 +407,12 @@ def main():
 
     ## SAVE THE SUBSET OF POINTS as a txt file : 
 
-    #mettre la colonne 0 = temps + 3 colonnes de 0 a la fin
-
-    new_coords_pcd1 = np.hstack((time_overlapping_point1, overlapped_merged1, laz_subset_pcd1))
-    new_coords_pcd2 = np.hstack((time_overlapping_point2, overlapped_merged2, laz_subset_pcd2))
-    #on rajoute une derniere colonne pour la provenance
-    new_coords_pcd1 = np.hstack((new_coords_pcd1, provenance_subset_pcd1))
-    new_coords_pcd2 = np.hstack((new_coords_pcd2, provenance_subset_pcd2))
-
-    print("new_coords_pcd1 : ", new_coords_pcd1.shape)
-    print("new_coords_pcd2 : ", new_coords_pcd2.shape)
-
     ########
     # t x y z 0 0 0 provenance
+
+    new_coords_pcd1 = np.concatenate((time_overlapping_point1.reshape(-1, 1), overlapped_merged1, laz_subset_pcd1, provenance_subset_pcd1), axis=1)
+    new_coords_pcd2 = np.concatenate((time_overlapping_point2.reshape(-1, 1), overlapped_merged2, laz_subset_pcd2, provenance_subset_pcd2), axis=1)
+    
 
 
 
