@@ -102,7 +102,7 @@ def main():
     # write the commands in the .sh file
     with open(sh_path , "w") as f:
         for path1, path2 in pairs.items():
-            f.write(f"python3 {path_to_align_chunks} --path1 {path1} --path2 {path2} {str_visu}\n")
+            f.write(f"python3 {path_to_align_chunks} --path1 {path1} --path2 {path2}\n")
 
     #make the file executable
     os.system(f"chmod +x {sh_path}")

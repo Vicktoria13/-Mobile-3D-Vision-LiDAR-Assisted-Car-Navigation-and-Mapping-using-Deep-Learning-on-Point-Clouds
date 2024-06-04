@@ -40,6 +40,13 @@ new_coords2 = np.hstack((new_coords2, np.zeros((coords2.shape[0],3))))
 new_coords1[:,0] = time1
 new_coords2[:,0] = time2
 
+
+#on veut t x y z 0 0 0 provenance. Ici rajouter donc une dernier colonne de 0 pour la provenance
+new_coords1 = np.hstack((new_coords1, np.zeros((coords1.shape[0],1))))
+new_coords2 = np.hstack((new_coords2, np.zeros((coords2.shape[0],1))))
+
+
+
 #save en txt    
 np.savetxt("/home/sdi-2023-01/Downloads/85268 - M230905_200520_200522_LEFT.txt", new_coords1, delimiter=" ", fmt="%s")
 np.savetxt("/home/sdi-2023-01/Downloads/85268 - M230905_200520_200522_RIGHT.txt", new_coords2, delimiter=" ", fmt="%s")

@@ -18,9 +18,8 @@ import argparse
 Input : Chunk A and Chunk B, in .txt format
 ChunkA.txt and ChunkB.txt are the point clouds of the two chunk.
 
-Input shape  : [ id time x y z 0 0 0 provenance]
-Output shape : [ id time x y z 0 0 0 provenance]
-
+Input shape  : [ id time x y z lazx lazy lazz provenance]
+Output shape : [ id time x y z lazx lazy lazz provenance]
 id : int
 time : float a 10^-8
 x : float a 10^-4
@@ -74,10 +73,13 @@ def main():
     ###################
 
 
-
+    # id time x y z lazx lazy lazz provenance
     #on ne garde que les colonnes 2 3 4 pour les tiles
     point_pcd1 = (np.loadtxt(args.path1, delimiter=delim))[:,2:5]
     point_pcd2 = (np.loadtxt(args.path2, delimiter=delim))[:,2:5]
+
+    laz_vec1 = (np.loadtxt(args.path1, delimiter=delim))[:,5:8]
+    laz_vec2 = (np.loadtxt(args.path2, delimiter=delim))[:,5:8]
 
     #pour le temps, on garde la colonne 1
     time_pcd1 = (np.loadtxt(args.path1, delimiter=delim))[:,1]
@@ -196,9 +198,7 @@ def main():
         
     result_pcd1_SIMPLE_ICP.points = o3d.utility.Vector3dVector(np.array(result_pcd1_SIMPLE_ICP.points) + np.array([x_shift_both, y_shift_both, z_shift_both]))
 
-    #convertir en liste
-    result_pcd1_SIMPLE_ICP = np.array(result_pcd1_SIMPLE_ICP.points)
-
+   
 
     
 
@@ -219,7 +219,7 @@ def main():
     to_save1 = np.hstack((id_pcd1.reshape(-1,1), 
                           time_pcd1.reshape(-1,1), 
                             np.array(result_pcd1_SIMPLE_ICP.points),
-                            np.zeros((len(result_pcd1_SIMPLE_ICP.points),3)),
+                            laz_vec1.reshape(-1,3),
                             provenance_pcd1
                             ))
     
@@ -227,7 +227,7 @@ def main():
     to_save2 = np.hstack((id_pcd2.reshape(-1,1),
                             time_pcd2.reshape(-1,1),
                                 np.array(pcd2.points),
-                                np.zeros((len(pcd2.points),3)),
+                                laz_vec2.reshape(-1,3),
                                 provenance_pcd2
                                 ))
     

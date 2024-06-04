@@ -1,7 +1,6 @@
 import numpy as np
 import open3d as o3d
 import time
-import laspy
 ################### FAIT POUR LE LAZ A TESTER
 size = 0.2 #8 pour le laz
 
